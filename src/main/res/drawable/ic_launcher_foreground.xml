@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+  <group android:scaleX="0.6"
+      android:scaleY="0.6"
+      android:translateX="21.6"
+      android:translateY="21.6">
+      <!-- Transparent background -->
+      <path
+          android:fillColor="#00000000"
+          android:pathData="M0,0h108v108h-108z" />
+      <!-- Centered and scaled Paymentology icon -->
+      <group
+          android:scaleX="0.174"
+          android:scaleY="0.174"
+          android:translateX="20.6"
+          android:translateY="18">
+          <path
+              android:pathData="M367.17,5.05h-168.65c-7.61,0 -14.77,2.97 -20.16,8.35l-164.7,164.7c-5.38,5.38 -8.35,12.54 -8.35,20.16v188.09c0,4.77 2.74,8.87 7.15,10.7 1.48,0.61 3,0.91 4.5,0.91 2.98,0 5.87,-1.18 8.12,-3.42l79.17,-79.17h154.11c69.05,0 125.22,-56.17 125.22,-125.22L383.58,21.46c0,-9.05 -7.36,-16.42 -16.42,-16.42ZM278.75,106.52c1.85,0 3.36,1.51 3.36,3.36v100.64c0,1.85 -1.51,3.36 -3.36,3.36h-168.6c-1.85,0 -3.36,-1.51 -3.36,-3.36v-100.64c0,-1.85 1.51,-3.36 3.36,-3.36h168.6Z"
+              android:fillColor="#FFF"/>
+      </group>
+  </group>
+</vector>

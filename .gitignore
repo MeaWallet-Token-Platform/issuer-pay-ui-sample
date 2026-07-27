@@ -1,0 +1,47 @@
+# Gradle / Android
+.gradle/
+build/
+**/build/
+.cxx/
+.externalNativeBuild/
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Local config
+local.properties
+*.env
+.env
+.env.local
+.env.*.local
+keystore.properties
+*.jks
+*.keystore
+
+# Generated artifacts
+*.aar
+*.apk
+*.aab
+*.dex
+*.class
+*.log
+bin/
+gen/
+out/
+
+# Test reports
+**/test-results/
+**/reports/
+
+# Misc
+.kotlin/
+*.orig
+*.rej

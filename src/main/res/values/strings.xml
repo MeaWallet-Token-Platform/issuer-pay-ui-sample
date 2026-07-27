@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Issuer Pay App</string>
+
+    <string name="apduServiceDescription">Issuer Pay App</string>
+    <string name="aidGroupDescription">Issuer Pay App</string>
+</resources>
