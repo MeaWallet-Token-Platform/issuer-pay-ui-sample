@@ -35,7 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.paymentology.dxp.issuerpay.sample.R
-import com.paymentology.dxp.issuerpay.ui.compose.platform.TokenPlatform
+import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

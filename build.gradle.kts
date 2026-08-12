@@ -73,7 +73,7 @@ android {
 
 dependencies {
     // Issuer Pay UI
-    implementation("com.paymentology:dxp-issuer-pay-ui-compose:0.2.0")
+    implementation("com.paymentology:dxp-issuer-pay-ui-compose:0.3.0")
 
     // TODO: Add company specific MTP-SDK dependency and remove the simulator artifact
     implementation("com.meawallet:mtp-mea-simulator-test:4.3.13-debug")

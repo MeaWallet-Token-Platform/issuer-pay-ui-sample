@@ -20,7 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.paymentology.dxp.issuerpay.sample.messaging.PushServiceInstanceManagerImpl
-import com.paymentology.dxp.issuerpay.ui.compose.platform.TokenPlatform
+import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
+
 
 @Composable
 fun SettingsScreen(

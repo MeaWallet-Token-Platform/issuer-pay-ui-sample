@@ -4,11 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.paymentology.dxp.issuerpay.ui.compose.di.appContainer
 import com.paymentology.dxp.issuerpay.sample.messaging.PushServiceInstanceManagerImpl
+import com.paymentology.dxp.issuerpay.sample.di.appContainer
 import com.paymentology.dxp.issuerpay.sample.ui.SampleAppScreen
-import com.paymentology.dxp.issuerpay.ui.compose.quickstart.RegistrationHelper
-import com.paymentology.dxp.issuerpay.ui.compose.theme.MyComposeAppTheme
+import com.paymentology.dxp.issuerpay.sample.ui.theme.MyComposeAppTheme
+import com.paymentology.dxp.issuerpay.ui.compose.core.api.RegistrationHelper
+import kotlin.getValue
+
 
 /**
  * Main entry point for the Issuer Pay UI sample app.
@@ -39,6 +41,7 @@ class MainActivity : ComponentActivity() {
             pushServiceInstanceManager = PushServiceInstanceManagerImpl,
             initializationHelper = initializationHelper
         )
-        registrationHelper.registerWallet()
+
+        registrationHelper.registerWallet("en", null)
     }
 }

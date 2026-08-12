@@ -15,6 +15,7 @@ the expected wiring around wallet registration, push handling, and digitization 
 - Wallet registration flow
 - Firebase push handling
 - Sample digitization flows and card UI
+- Application-level dependency injection (`sample/di`) for shared SDK services
 
 ## Tested versions
 
@@ -49,4 +50,3 @@ Add your signing configuration (usually ```keystore.jks``` file). Make sure you 
 ## Notes
 
 - This repository is intentionally sample-focused and not a production app template.
-
