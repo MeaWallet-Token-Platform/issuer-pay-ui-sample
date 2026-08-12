@@ -12,7 +12,7 @@ import kotlin.getValue
 /**
  * Default [AppContainer] implementation for the sample app process.
  *
- * Reuses SDK dependencies that are initialized by [IssuerPayApp].
+ * Owns long-lived SDK dependencies for the sample app process.
  */
 class AppContainerImpl(
     private val appContext: Context
