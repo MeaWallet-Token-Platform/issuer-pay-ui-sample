@@ -1,5 +1,6 @@
 package com.paymentology.dxp.issuerpay.sample.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,9 +17,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.meawallet.mtp.MeaCard
-import com.paymentology.dxp.issuerpay.ui.compose.PaymentFlowActivity
-import com.paymentology.dxp.issuerpay.ui.compose.platform.TokenPlatform
-import com.paymentology.dxp.issuerpay.ui.compose.PaymentActivityEvent
+import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
+import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardContract
+import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardLauncherInput
+import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardResult
+import kotlin.jvm.java
 
 @Composable
 fun CardListScreen(
@@ -49,6 +52,26 @@ fun CardListScreen(
         refreshCards()
     }
 
+    val launcher = rememberLauncherForActivityResult(
+        contract = PayByCardContract(),
+        onResult = { result ->
+            when (result) {
+                is PayByCardResult.Success -> {
+                    // Handle successful payment
+                    println("Payment successful. Transaction data: ${result.paymentData}")
+                }
+                is PayByCardResult.Error -> {
+                    // Handle payment error
+                    println("Payment failed: ${result.error}")
+                }
+                is PayByCardResult.Cancelled -> {
+                    // Handle user cancellation
+                    println("Payment cancelled by user")
+                }
+            }
+        }
+    )
+
     if (showActionDialog && selectedCard != null) {
         CardActionDialog(
             card = selectedCard!!,
@@ -66,12 +89,7 @@ fun CardListScreen(
             },
             onTapAndPay = {
                 selectedCard?.let { card ->
-                    val intent = com.paymentology.dxp.issuerpay.ui.compose.common.PaymentActivityIntent(
-                        context,
-                        PaymentFlowActivity::class.java,
-                        PaymentActivityEvent.PayByChosenCard(card.id)
-                    )
-                    context.startActivity(intent)
+                    launcher.launch(PayByCardLauncherInput(cardId = card.id))
                 }
                 showActionDialog = false
             }

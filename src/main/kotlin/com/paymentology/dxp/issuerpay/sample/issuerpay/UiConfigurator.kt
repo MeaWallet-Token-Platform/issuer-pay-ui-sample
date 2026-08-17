@@ -1,7 +1,7 @@
 package com.paymentology.dxp.issuerpay.sample.issuerpay
 
 import androidx.compose.material3.Text
-import com.paymentology.dxp.issuerpay.ui.compose.uiconfig.UiComposeConfigHolderImpl
+import com.paymentology.dxp.issuerpay.ui.compose.core.api.UiComposeConfigHolderImpl
 
 /**
  * Configures optional custom Compose content for Issuer Pay UI screens.

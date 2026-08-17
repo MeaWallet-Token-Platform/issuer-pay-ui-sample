@@ -9,9 +9,8 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.meawallet.mtp.*
 import com.paymentology.dxp.issuerpay.sample.MainActivity
-import com.paymentology.dxp.issuerpay.ui.compose.common.messaging.NotificationHelper
-import com.paymentology.dxp.issuerpay.ui.compose.di.appContainer
-import com.paymentology.dxp.issuerpay.ui.compose.platform.TokenPlatform
+import com.paymentology.dxp.issuerpay.sample.di.appContainer
+import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.isInitialized

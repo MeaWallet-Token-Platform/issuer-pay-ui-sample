@@ -1,8 +1,8 @@
 package com.paymentology.dxp.issuerpay.sample.messaging
 
 import com.google.firebase.messaging.FirebaseMessaging
-import com.paymentology.dxp.issuerpay.ui.compose.common.messaging.PushServiceInstanceIdGetListener
-import com.paymentology.dxp.issuerpay.ui.compose.common.messaging.PushServiceInstanceManager
+import com.paymentology.dxp.issuerpay.ui.compose.core.api.PushServiceInstanceIdGetListener
+import com.paymentology.dxp.issuerpay.ui.compose.core.api.PushServiceInstanceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

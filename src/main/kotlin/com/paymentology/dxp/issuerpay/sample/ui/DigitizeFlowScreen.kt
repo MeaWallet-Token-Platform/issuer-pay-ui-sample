@@ -26,14 +26,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.paymentology.dxp.issuerpay.sample.utils.EncryptedDataReader
 import com.paymentology.dxp.issuerpay.sample.utils.RandomPanBuilder
-import com.paymentology.dxp.issuerpay.ui.compose.DigitizationLauncherInput
-import com.paymentology.dxp.issuerpay.ui.compose.DigitizationParameters
-import com.paymentology.dxp.issuerpay.ui.compose.button.CardDigitizationButton
-import com.paymentology.dxp.issuerpay.ui.compose.common.CardDigitizationCallback
-import com.paymentology.dxp.issuerpay.ui.compose.common.PlatformError
-import com.paymentology.dxp.issuerpay.ui.compose.component.M3ExposedDropdown
-import com.paymentology.dxp.issuerpay.ui.compose.uiconfig.BackgroundBrush
-import com.paymentology.dxp.issuerpay.ui.compose.uiconfig.PaymentCardConfig
+import com.paymentology.dxp.issuerpay.ui.compose.core.api.PlatformError
+import com.paymentology.dxp.issuerpay.ui.compose.digitization.api.BackgroundBrush
+import com.paymentology.dxp.issuerpay.ui.compose.digitization.api.CardDigitizationButton
+import com.paymentology.dxp.issuerpay.ui.compose.digitization.api.CardDigitizationCallback
+import com.paymentology.dxp.issuerpay.ui.compose.digitization.api.DigitizationLauncherInput
+import com.paymentology.dxp.issuerpay.ui.compose.digitization.api.DigitizationParameters
+import com.paymentology.dxp.issuerpay.ui.compose.digitization.api.PaymentCardConfig
+
 
 @Composable
 fun DigitizeFlowScreen(
