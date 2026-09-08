@@ -2,6 +2,7 @@ package com.paymentology.dxp.issuerpay.sample.di
 
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.InitializationHelper
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
+import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
 
 
 /**
@@ -19,4 +20,9 @@ interface AppContainer {
      * Helper responsible for SDK initialization and setup.
      */
     val initializationHelper: InitializationHelper
+
+    /**
+     * App-scoped coordinator for wallet registration retries and state.
+     */
+    val registrationCoordinator: RegistrationCoordinator
 }

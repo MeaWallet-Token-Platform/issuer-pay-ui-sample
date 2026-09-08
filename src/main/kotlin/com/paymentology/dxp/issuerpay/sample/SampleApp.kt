@@ -28,8 +28,15 @@ class SampleApp : Application(), AppContainerProvider {
         // Initialize the platform and SDK. This is required for the SDK to work properly.
         appContainer.initializationHelper.initializePlatform()
         SdkCardEventSubscriptions.subscribeToCardEvents()
+        appContainer.registrationCoordinator.start()
 
 
 //        configureCustomUi()  // TODO: enable after custom UI is ready (if necessary)
+    }
+
+    override fun onTerminate() {
+        appContainer.registrationCoordinator.stop()
+        SdkCardEventSubscriptions.unsubscribeFromCardEvents()
+        super.onTerminate()
     }
 }

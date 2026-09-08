@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.sp
 import com.meawallet.mtp.MeaCard
 import com.meawallet.mtp.MeaCardListener
 import com.meawallet.mtp.MeaError
+import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
+import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationState
 import com.paymentology.dxp.issuerpay.sample.sdk.SdkCardEvents
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardContract
@@ -31,6 +33,7 @@ import kotlin.jvm.java
 @Composable
 fun CardListScreen(
     tokenPlatform: TokenPlatform,
+    registrationCoordinator: RegistrationCoordinator,
     modifier: Modifier = Modifier
 ) {
     var cards by remember { mutableStateOf<List<MeaCard>>(emptyList()) }
@@ -40,6 +43,7 @@ fun CardListScreen(
     var showActionDialog by remember { mutableStateOf(false) }
     var defaultCard by remember { mutableStateOf<MeaCard?>(null) }
     val lifecycleOwner = LocalLifecycleOwner.current
+    val registrationState by registrationCoordinator.registrationState.collectAsState()
 
     fun refreshCards() {
         isLoading = true
@@ -64,6 +68,12 @@ fun CardListScreen(
 
     LaunchedEffect(Unit) {
         SdkCardEvents.cardUpdates.collect {
+            refreshCards()
+        }
+    }
+
+    LaunchedEffect(registrationState) {
+        if (registrationState == RegistrationState.Registered) {
             refreshCards()
         }
     }
@@ -192,8 +202,8 @@ fun CardListScreen(
 @Composable
 fun PaymentCardItem(
     card: MeaCard,
-    isDefault: Boolean = false,
     modifier: Modifier = Modifier,
+    isDefault: Boolean = false,
     onClick: () -> Unit = {}
 ) {
     // Card aspect ratio is typically 1.586:1 (85.6mm x 53.98mm)

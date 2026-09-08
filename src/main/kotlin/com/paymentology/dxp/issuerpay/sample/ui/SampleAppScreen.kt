@@ -35,13 +35,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.paymentology.dxp.issuerpay.sample.R
+import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SampleAppScreen(
-    tokenPlatform: TokenPlatform
+    tokenPlatform: TokenPlatform,
+    registrationCoordinator: RegistrationCoordinator
 ) {
     val tabs = listOf(
         DemoTab.Digitize,
@@ -142,13 +144,18 @@ fun SampleAppScreen(
                 modifier = Modifier.fillMaxSize()
             ) { page ->
                 when (tabs[page]) {
-                    DemoTab.Digitize -> DigitizeFlowScreen(modifier = Modifier.fillMaxSize())
+                    DemoTab.Digitize -> DigitizeFlowScreen(
+                        registrationCoordinator = registrationCoordinator,
+                        modifier = Modifier.fillMaxSize()
+                    )
                     DemoTab.Cards -> CardListScreen(
                         tokenPlatform = tokenPlatform,
+                        registrationCoordinator = registrationCoordinator,
                         modifier = Modifier.fillMaxSize()
                     )
                     DemoTab.Settings -> SettingsScreen(
                         tokenPlatform = tokenPlatform,
+                        registrationCoordinator = registrationCoordinator,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

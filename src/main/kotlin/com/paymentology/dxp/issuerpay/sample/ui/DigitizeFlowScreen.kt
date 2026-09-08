@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
+import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationState
 import com.paymentology.dxp.issuerpay.sample.utils.EncryptedDataReader
 import com.paymentology.dxp.issuerpay.sample.utils.RandomPanBuilder
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.PlatformError
@@ -37,11 +40,14 @@ import com.paymentology.dxp.issuerpay.ui.compose.digitization.api.PaymentCardCon
 
 @Composable
 fun DigitizeFlowScreen(
+    registrationCoordinator: RegistrationCoordinator,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var cardDigitizationStatus by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
+    val registrationState by registrationCoordinator.registrationState.collectAsState()
+    val registrationErrorMessage = (registrationState as? RegistrationState.Failed)?.message.orEmpty()
 
     var selectedDigitizationMethod by remember { mutableStateOf(DigitizationMethod.PAN) }
     var selectedDigitizationOption by remember { mutableStateOf(DigitizationOption.Normal) }
@@ -84,6 +90,10 @@ fun DigitizeFlowScreen(
                 currentCardholderName = cardholderName
             )
         }
+    }
+
+    LaunchedEffect(Unit) {
+        registrationCoordinator.ensureRegistered()
     }
 
     // Primary client integration #1:
@@ -234,10 +244,19 @@ fun DigitizeFlowScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        Text(
+            text = "Registration: ${registrationState.toDisplayLabel()}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         // Primary client integration #3:
         // Invoke the library flow entrypoint via CardDigitizationButton.
         CardDigitizationButton(
             label = "Digitize Card",
+            enabled = registrationState == RegistrationState.Registered,
             modifier = Modifier.fillMaxWidth(),
             params = launcherInput,
             callback = object : CardDigitizationCallback {
@@ -252,6 +271,7 @@ fun DigitizeFlowScreen(
                         is PlatformError.MtpSdkError -> "${error.code}: ${error.message ?: "Unknown error"}"
                         else -> error.javaClass.name
                     }
+                    registrationCoordinator.ensureRegistered()
                 }
 
                 override fun onUserCancelled() {
@@ -270,13 +290,23 @@ fun DigitizeFlowScreen(
             )
         }
 
-        if (errorMessage.isNotEmpty()) {
+        val visibleErrorMessage = registrationErrorMessage.ifBlank { errorMessage }
+
+        if (visibleErrorMessage.isNotEmpty()) {
             Text(
-                text = "Error: $errorMessage",
+                text = "Error: $visibleErrorMessage",
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 16.dp)
             )
         }
     }
+
+}
+
+private fun RegistrationState.toDisplayLabel(): String = when (this) {
+    RegistrationState.Registered -> "Registered"
+    RegistrationState.Registering -> "Registering"
+    RegistrationState.Unregistered -> "Not registered"
+    is RegistrationState.Failed -> "Not registered"
 }

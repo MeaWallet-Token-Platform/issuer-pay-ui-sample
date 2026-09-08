@@ -20,12 +20,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.paymentology.dxp.issuerpay.sample.messaging.PushServiceInstanceManagerImpl
+import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
+import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationState
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 
 
 @Composable
 fun SettingsScreen(
     tokenPlatform: TokenPlatform,
+    registrationCoordinator: RegistrationCoordinator,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -33,6 +36,7 @@ fun SettingsScreen(
     val msgToken by PushServiceInstanceManagerImpl
         .getObservableIdToken(coroutineScope)
         .collectAsState(initial = "")
+    val registrationState by registrationCoordinator.registrationState.collectAsState()
     var refreshTick by remember { mutableStateOf(0) }
 
     val sdkInfo = remember(refreshTick) {
@@ -49,10 +53,7 @@ fun SettingsScreen(
         runCatching { tokenPlatform.isInitialized().toString() }
             .getOrElse { "Error: ${it.message ?: it.javaClass.simpleName}" }
     }
-    val registered = remember(refreshTick) {
-        runCatching { tokenPlatform.isRegistered().toString() }
-            .getOrElse { "Error: ${it.message ?: it.javaClass.simpleName}" }
-    }
+    val registered = registrationState.toRegisteredDisplayText()
     val secureNfcSupported = remember(refreshTick) {
         runCatching { tokenPlatform.isSecureNfcSupported().toString() }
             .getOrElse { "Error: ${it.message ?: it.javaClass.simpleName}" }
@@ -115,4 +116,11 @@ private fun SettingRow(label: String, value: String) {
         Text(text = "$label: ", style = MaterialTheme.typography.bodyMedium)
         Text(text = value, style = MaterialTheme.typography.bodyMedium)
     }
+}
+
+private fun RegistrationState.toRegisteredDisplayText(): String = when (this) {
+    RegistrationState.Registered -> "true"
+    RegistrationState.Registering -> "registering"
+    RegistrationState.Unregistered -> "false"
+    is RegistrationState.Failed -> "false"
 }
