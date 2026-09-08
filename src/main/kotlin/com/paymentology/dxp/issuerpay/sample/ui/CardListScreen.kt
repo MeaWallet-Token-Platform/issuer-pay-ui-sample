@@ -17,10 +17,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.meawallet.mtp.MeaCard
+import com.meawallet.mtp.MeaCardListener
+import com.meawallet.mtp.MeaError
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardContract
 import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardLauncherInput
 import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardResult
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlin.jvm.java
 
 @Composable
@@ -35,12 +40,18 @@ fun CardListScreen(
     var showActionDialog by remember { mutableStateOf(false) }
     var defaultCard by remember { mutableStateOf<MeaCard?>(null) }
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     fun refreshCards() {
         isLoading = true
+        errorMessage = null
         try {
-            cards = tokenPlatform.getCards()
-            defaultCard = tokenPlatform.getDefaultCardForContactlessPayments()
+            val latestCards = tokenPlatform.getCards()
+            cards = latestCards
+            defaultCard = tokenPlatform
+                .getDefaultCardForContactlessPayments()
+                ?.takeIf { default -> latestCards.any { it.id == default.id } }
+            selectedCard = selectedCard?.takeIf { selected -> latestCards.any { it.id == selected.id } }
             isLoading = false
         } catch (e: Exception) {
             errorMessage = e.message ?: "Failed to load cards"
@@ -50,6 +61,16 @@ fun CardListScreen(
 
     LaunchedEffect(Unit) {
         refreshCards()
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                refreshCards()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     val launcher = rememberLauncherForActivityResult(
@@ -69,6 +90,7 @@ fun CardListScreen(
                     println("Payment cancelled by user")
                 }
             }
+            refreshCards()
         }
     )
 
@@ -78,18 +100,37 @@ fun CardListScreen(
             isDefault = defaultCard?.id == selectedCard?.id,
             onDismiss = { showActionDialog = false },
             onSetAsDefault = {
-                selectedCard?.setAsDefaultForContactlessPayments()
                 showActionDialog = false
-                refreshCards()
+                try {
+                    selectedCard?.setAsDefaultForContactlessPayments()
+                    refreshCards()
+                } catch (e: Exception) {
+                    errorMessage = e.message ?: "Failed to set card as default"
+                    refreshCards()
+                }
             },
             onDelete = {
-                selectedCard?.markForDeletion(null)
                 showActionDialog = false
-                refreshCards()
+                selectedCard?.delete(object : MeaCardListener {
+                    override fun onSuccess(card: MeaCard) {
+                        selectedCard = null
+                        refreshCards()
+                    }
+
+                    override fun onFailure(error: MeaError) {
+                        errorMessage = error.message ?: "Failed to delete card"
+                        refreshCards()
+                    }
+                })
             },
             onTapAndPay = {
                 selectedCard?.let { card ->
-                    launcher.launch(PayByCardLauncherInput(cardId = card.id))
+                    if (cards.any { it.id == card.id }) {
+                        launcher.launch(PayByCardLauncherInput(cardId = card.id))
+                    } else {
+                        errorMessage = "Card is no longer available. Refreshing cards."
+                        refreshCards()
+                    }
                 }
                 showActionDialog = false
             }
