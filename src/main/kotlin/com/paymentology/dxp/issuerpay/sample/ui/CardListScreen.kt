@@ -12,13 +12,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.meawallet.mtp.MeaCard
 import com.meawallet.mtp.MeaCardListener
 import com.meawallet.mtp.MeaError
+import com.paymentology.dxp.issuerpay.sample.sdk.SdkCardEvents
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardContract
 import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardLauncherInput
@@ -39,7 +39,6 @@ fun CardListScreen(
     var selectedCard by remember { mutableStateOf<MeaCard?>(null) }
     var showActionDialog by remember { mutableStateOf(false) }
     var defaultCard by remember { mutableStateOf<MeaCard?>(null) }
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     fun refreshCards() {
@@ -61,6 +60,12 @@ fun CardListScreen(
 
     LaunchedEffect(Unit) {
         refreshCards()
+    }
+
+    LaunchedEffect(Unit) {
+        SdkCardEvents.cardUpdates.collect {
+            refreshCards()
+        }
     }
 
     DisposableEffect(lifecycleOwner) {
