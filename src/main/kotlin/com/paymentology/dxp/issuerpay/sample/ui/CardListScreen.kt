@@ -1,6 +1,8 @@
 package com.paymentology.dxp.issuerpay.sample.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.meawallet.mtp.MeaCard
 import com.meawallet.mtp.MeaCardListener
+import com.meawallet.mtp.MeaCardState
 import com.meawallet.mtp.MeaError
 import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
 import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationState
@@ -28,7 +31,6 @@ import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardResult
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import kotlin.jvm.java
 
 @Composable
 fun CardListScreen(
@@ -110,19 +112,27 @@ fun CardListScreen(
     )
 
     if (showActionDialog && selectedCard != null) {
+        val isSelectedCardActive = isActiveCard(selectedCard!!)
         CardActionDialog(
             card = selectedCard!!,
             isDefault = defaultCard?.id == selectedCard?.id,
+            isTapAndPayEnabled = isSelectedCardActive,
+            isSetAsDefaultVisible = isSelectedCardActive,
             onDismiss = { showActionDialog = false },
             onSetAsDefault = {
                 showActionDialog = false
                 try {
-                    selectedCard?.setAsDefaultForContactlessPayments()
-                    refreshCards()
+                    selectedCard?.let { card ->
+                        if (isActiveCard(card)) {
+                            card.setAsDefaultForContactlessPayments()
+                        } else {
+                            errorMessage = "Set as Default is only available for ACTIVE cards."
+                        }
+                    }
                 } catch (e: Exception) {
                     errorMessage = e.message ?: "Failed to set card as default"
-                    refreshCards()
                 }
+                refreshCards()
             },
             onDelete = {
                 showActionDialog = false
@@ -140,7 +150,10 @@ fun CardListScreen(
             },
             onTapAndPay = {
                 selectedCard?.let { card ->
-                    if (cards.any { it.id == card.id }) {
+                    if (!isActiveCard(card)) {
+                        errorMessage = "Tap & Pay is only available for ACTIVE cards."
+                        refreshCards()
+                    } else if (cards.any { it.id == card.id }) {
                         launcher.launch(PayByCardLauncherInput(cardId = card.id))
                     } else {
                         errorMessage = "Card is no longer available. Refreshing cards."
@@ -206,6 +219,8 @@ fun PaymentCardItem(
     isDefault: Boolean = false,
     onClick: () -> Unit = {}
 ) {
+    val isActive = isActiveCard(card)
+
     // Card aspect ratio is typically 1.586:1 (85.6mm x 53.98mm)
     Card(
         onClick = onClick,
@@ -245,6 +260,17 @@ fun PaymentCardItem(
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
+            }
+
+            if (!isActive) {
+                Icon(
+                    imageVector = Icons.Filled.WarningAmber,
+                    contentDescription = "Card is not active",
+                    tint = Color(0xFFFFC107),
+                    modifier = Modifier
+                        .size(18.dp)
+                        .align(Alignment.CenterEnd)
+                )
             }
 
             Column(
@@ -348,6 +374,8 @@ private fun getRemainingTokens(card: MeaCard): String {
 fun CardActionDialog(
     card: MeaCard,
     isDefault: Boolean,
+    isTapAndPayEnabled: Boolean,
+    isSetAsDefaultVisible: Boolean,
     onDismiss: () -> Unit,
     onSetAsDefault: () -> Unit,
     onDelete: () -> Unit,
@@ -367,12 +395,13 @@ fun CardActionDialog(
                 )
                 Button(
                     onClick = onTapAndPay,
+                    enabled = isTapAndPayEnabled,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Tap & Pay")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                if (!isDefault) {
+                if (!isDefault && isSetAsDefaultVisible) {
                     Button(
                         onClick = onSetAsDefault,
                         modifier = Modifier.fillMaxWidth()
@@ -405,4 +434,12 @@ fun CardActionDialog(
             }
         }
     )
+}
+
+private fun isActiveCard(card: MeaCard): Boolean {
+    return try {
+        card.state == MeaCardState.ACTIVE
+    } catch (_: Exception) {
+        false
+    }
 }
