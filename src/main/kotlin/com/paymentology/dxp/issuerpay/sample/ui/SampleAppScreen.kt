@@ -5,6 +5,7 @@ import android.os.Looper
 import android.os.Process
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -28,22 +29,34 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.paymentology.dxp.issuerpay.sample.R
 import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListEffect
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListIntent
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListViewModel
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsViewModel
+import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardContract
+import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardLauncherInput
+import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardResult
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SampleAppScreen(
     tokenPlatform: TokenPlatform,
-    registrationCoordinator: RegistrationCoordinator
+    registrationCoordinator: RegistrationCoordinator,
+    cardListViewModel: CardListViewModel,
+    settingsViewModel: SettingsViewModel
 ) {
     val tabs = listOf(
         DemoTab.Digitize,
@@ -55,6 +68,35 @@ fun SampleAppScreen(
     val showMenu = remember { mutableStateOf(false) }
     val showResetDialog = remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val cardState by cardListViewModel.state.collectAsState()
+    val settingsState by settingsViewModel.state.collectAsState()
+    val paymentLauncher = rememberLauncherForActivityResult(
+        contract = PayByCardContract(),
+        onResult = { result ->
+            when (result) {
+                is PayByCardResult.Success -> {
+                    Log.d("SampleAppScreen", "Payment successful. Transaction data: ${result.paymentData}")
+                }
+                is PayByCardResult.Error -> {
+                    Log.e("SampleAppScreen", "Payment failed: ${result.error}")
+                }
+                is PayByCardResult.Cancelled -> {
+                    Log.d("SampleAppScreen", "Payment cancelled by user")
+                }
+            }
+            cardListViewModel.dispatch(CardListIntent.Refresh)
+        }
+    )
+
+    LaunchedEffect(cardListViewModel) {
+        cardListViewModel.effects.collect { effect ->
+            when (effect) {
+                is CardListEffect.LaunchPayment -> {
+                    paymentLauncher.launch(PayByCardLauncherInput(cardId = effect.cardId))
+                }
+            }
+        }
+    }
 
     if (showResetDialog.value) {
         AlertDialog(
@@ -149,13 +191,23 @@ fun SampleAppScreen(
                         modifier = Modifier.fillMaxSize()
                     )
                     DemoTab.Cards -> CardListScreen(
-                        tokenPlatform = tokenPlatform,
-                        registrationCoordinator = registrationCoordinator,
+                        state = cardState,
+                        onRefresh = { cardListViewModel.dispatch(CardListIntent.Refresh) },
+                        onCardClicked = { cardId -> cardListViewModel.dispatch(CardListIntent.CardClicked(cardId)) },
+                        onDismissDialog = { cardListViewModel.dispatch(CardListIntent.DismissDialog) },
+                        onSetDefaultSelectedCard = { cardListViewModel.dispatch(CardListIntent.SetDefaultSelectedCard) },
+                        onDeleteSelectedCard = { cardListViewModel.dispatch(CardListIntent.DeleteSelectedCard) },
+                        onTapAndPaySelectedCard = { cardListViewModel.dispatch(CardListIntent.TapAndPaySelectedCard) },
                         modifier = Modifier.fillMaxSize()
                     )
                     DemoTab.Settings -> SettingsScreen(
-                        tokenPlatform = tokenPlatform,
-                        registrationCoordinator = registrationCoordinator,
+                        state = settingsState,
+                        onRefresh = { settingsViewModel.dispatch(com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsIntent.Refresh) },
+                        onSetDefaultPaymentApp = { activity ->
+                            settingsViewModel.dispatch(
+                                com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsIntent.SetDefaultPaymentApp(activity)
+                            )
+                        },
                         modifier = Modifier.fillMaxSize()
                     )
                 }

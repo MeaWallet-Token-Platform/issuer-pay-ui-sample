@@ -4,8 +4,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import com.paymentology.dxp.issuerpay.sample.di.appContainer
+import com.paymentology.dxp.issuerpay.sample.messaging.PushServiceInstanceManagerImpl
 import com.paymentology.dxp.issuerpay.sample.ui.SampleAppScreen
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListViewModel
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListViewModelFactory
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsViewModel
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsViewModelFactory
 import com.paymentology.dxp.issuerpay.sample.ui.theme.MyComposeAppTheme
 import kotlin.getValue
 
@@ -18,6 +24,17 @@ import kotlin.getValue
 class MainActivity : ComponentActivity() {
     private val tokenPlatform by lazy { appContainer.tokenPlatform }
     private val registrationCoordinator by lazy { appContainer.registrationCoordinator }
+    private val cardListViewModel: CardListViewModel by viewModels {
+        CardListViewModelFactory(tokenPlatform, registrationCoordinator)
+    }
+    private val settingsViewModel: SettingsViewModel by viewModels {
+        SettingsViewModelFactory(
+            appContext = applicationContext,
+            tokenPlatform = tokenPlatform,
+            registrationCoordinator = registrationCoordinator,
+            pushServiceInstanceManager = PushServiceInstanceManagerImpl
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -27,11 +44,12 @@ class MainActivity : ComponentActivity() {
             MyComposeAppTheme {
                 SampleAppScreen(
                     tokenPlatform = tokenPlatform,
-                    registrationCoordinator = registrationCoordinator
+                    registrationCoordinator = registrationCoordinator,
+                    cardListViewModel = cardListViewModel,
+                    settingsViewModel = settingsViewModel
                 )
             }
         }
-        registrationCoordinator.start()
     }
 
     override fun onResume() {
