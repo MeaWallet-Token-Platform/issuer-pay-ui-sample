@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
     private val tokenPlatform by lazy { appContainer.tokenPlatform }
     private val registrationCoordinator by lazy { appContainer.registrationCoordinator }
     private val cardListViewModel: CardListViewModel by viewModels {
-        CardListViewModelFactory(tokenPlatform, registrationCoordinator)
+        CardListViewModelFactory(applicationContext, tokenPlatform, registrationCoordinator)
     }
     private val settingsViewModel: SettingsViewModel by viewModels {
         SettingsViewModelFactory(

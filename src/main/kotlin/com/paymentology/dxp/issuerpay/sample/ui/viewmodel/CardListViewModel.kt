@@ -1,5 +1,6 @@
 package com.paymentology.dxp.issuerpay.sample.ui.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -8,6 +9,7 @@ import com.meawallet.mtp.MeaCard
 import com.meawallet.mtp.MeaCardListener
 import com.meawallet.mtp.MeaCardState
 import com.meawallet.mtp.MeaError
+import com.paymentology.dxp.issuerpay.sample.R
 import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
 import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationState
 import com.paymentology.dxp.issuerpay.sample.sdk.SdkCardEvents
@@ -60,6 +62,7 @@ sealed interface CardListEffect {
 }
 
 class CardListViewModel(
+    appContext: Context,
     private val tokenPlatform: TokenPlatform,
     private val registrationCoordinator: RegistrationCoordinator
 ) : ViewModel() {
@@ -67,6 +70,8 @@ class CardListViewModel(
     companion object {
         private const val TAG = "CardListViewModel"
     }
+
+    private val applicationContext = appContext.applicationContext
 
     private val _state = MutableStateFlow(CardListUiState())
     val state: StateFlow<CardListUiState> = _state.asStateFlow()
@@ -154,7 +159,7 @@ class CardListViewModel(
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = throwable.message ?: "Failed to load cards"
+                            errorMessage = throwable.message ?: applicationContext.getString(R.string.ui_failed_to_load_cards)
                         )
                     }
                 }
@@ -185,12 +190,12 @@ class CardListViewModel(
     private fun setSelectedCardAsDefault() {
         val selectedCard = state.value.selectedCard
         if (selectedCard == null) {
-            setError("No card selected.")
+            setError(applicationContext.getString(R.string.ui_no_card_selected))
             return
         }
 
         if (!selectedCard.isActive) {
-            setError("Set as Default is only available for ACTIVE cards.")
+            setError(applicationContext.getString(R.string.ui_set_as_default_active_only))
             return
         }
 
@@ -209,7 +214,7 @@ class CardListViewModel(
                 },
                 onFailure = { throwable ->
                     Log.e(TAG, "Failed to set card as default.", throwable)
-                    setError(throwable.message ?: "Failed to set card as default")
+                    setError(throwable.message ?: applicationContext.getString(R.string.ui_failed_to_set_card_default))
                     dispatch(CardListIntent.Refresh)
                 }
             )
@@ -219,7 +224,7 @@ class CardListViewModel(
     private fun deleteSelectedCard() {
         val selectedCard = state.value.selectedCard
         if (selectedCard == null) {
-            setError("No card selected.")
+            setError(applicationContext.getString(R.string.ui_no_card_selected))
             return
         }
 
@@ -240,7 +245,7 @@ class CardListViewModel(
 
                     override fun onFailure(error: MeaError) {
                         Log.e(TAG, "Failed to delete card ${selectedCard.card.id}: ${error.message}")
-                        setError(error.message ?: "Failed to delete card")
+                        setError(error.message ?: applicationContext.getString(R.string.ui_failed_to_delete_card))
                         dispatch(CardListIntent.Refresh)
                     }
                 })
@@ -251,12 +256,12 @@ class CardListViewModel(
     private fun launchSelectedCardPayment() {
         val selectedCard = state.value.selectedCard
         if (selectedCard == null) {
-            setError("No card selected.")
+            setError(applicationContext.getString(R.string.ui_no_card_selected))
             return
         }
 
         if (!selectedCard.isActive) {
-            setError("Tap & Pay is only available for ACTIVE cards.")
+            setError(applicationContext.getString(R.string.ui_tap_and_pay_active_only))
             return
         }
 
@@ -324,6 +329,7 @@ class CardListViewModel(
 }
 
 class CardListViewModelFactory(
+    private val appContext: Context,
     private val tokenPlatform: TokenPlatform,
     private val registrationCoordinator: RegistrationCoordinator
 ) : ViewModelProvider.Factory {
@@ -331,7 +337,7 @@ class CardListViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
             modelClass.isAssignableFrom(CardListViewModel::class.java) -> {
-                CardListViewModel(tokenPlatform, registrationCoordinator) as T
+                CardListViewModel(appContext, tokenPlatform, registrationCoordinator) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

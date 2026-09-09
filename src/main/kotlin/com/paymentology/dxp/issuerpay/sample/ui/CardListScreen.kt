@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.WarningAmber
@@ -31,6 +30,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -38,6 +38,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.lazy.itemsIndexed
+import com.paymentology.dxp.issuerpay.sample.R
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardUiModel
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListUiState
 
@@ -87,14 +89,14 @@ fun CardListScreen(
                         onClick = onRefresh,
                         modifier = Modifier.padding(top = 12.dp)
                     ) {
-                        Text("Refresh")
+                        Text(stringResource(R.string.ui_refresh))
                     }
                 }
             }
 
             state.cards.isEmpty() -> {
                 Text(
-                    text = "No cards available",
+                    text = stringResource(R.string.ui_no_cards_available),
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -108,7 +110,12 @@ fun CardListScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(state.cards, key = { it.card.id }) { card ->
+                    itemsIndexed(
+                        items = state.cards,
+                        key = { index, card ->
+                            card.card.id.takeIf { it.isNotBlank() } ?: "card-$index"
+                        }
+                    ) { _, card ->
                         PaymentCardItem(
                             card = card,
                             onClick = { onCardClicked(card.card.id) }
@@ -155,7 +162,7 @@ fun PaymentCardItem(
                     tonalElevation = 2.dp
                 ) {
                     Text(
-                        text = "DEFAULT",
+                        text = stringResource(R.string.ui_default_card_badge),
                         color = Color.Black,
                         fontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
@@ -167,7 +174,7 @@ fun PaymentCardItem(
             if (!card.isActive) {
                 Icon(
                     imageVector = Icons.Filled.WarningAmber,
-                    contentDescription = "Card is not active",
+                    contentDescription = stringResource(R.string.ui_this_card_is_not_active),
                     tint = Color(0xFFFFC107),
                     modifier = Modifier
                         .size(18.dp)
@@ -205,7 +212,7 @@ fun PaymentCardItem(
                 ) {
                     Column {
                         Text(
-                            text = "Status",
+                            text = stringResource(R.string.ui_status_label),
                             color = Color.White.copy(alpha = 0.7f),
                             fontSize = 10.sp
                         )
@@ -219,7 +226,7 @@ fun PaymentCardItem(
 
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "Tokens",
+                            text = stringResource(R.string.ui_tokens_label),
                             color = Color.White.copy(alpha = 0.7f),
                             fontSize = 10.sp
                         )
@@ -249,11 +256,11 @@ fun CardActionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = "Card Actions") },
+    title = { Text(text = stringResource(R.string.ui_card_actions_title)) },
         text = {
             Column {
                 Text(
-                    text = "Card: ${formatCardId(card.card.id)}",
+                text = stringResource(R.string.ui_card_label, formatCardId(card.card.id)),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -262,19 +269,19 @@ fun CardActionDialog(
                     enabled = canTapAndPay,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Tap & Pay")
+                    Text(stringResource(R.string.ui_tap_and_pay))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 if (isDefault) {
                     Text(
-                        text = "This is your default card",
+                        text = stringResource(R.string.ui_this_is_your_default_card),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 } else if (!canSetAsDefault) {
                     Text(
-                        text = "This card is not active",
+                        text = stringResource(R.string.ui_this_card_is_not_active),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(vertical = 8.dp)
@@ -284,7 +291,7 @@ fun CardActionDialog(
                         onClick = onSetAsDefault,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Set as Default")
+                        Text(stringResource(R.string.ui_set_as_default))
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -295,13 +302,13 @@ fun CardActionDialog(
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Delete Card")
+                    Text(stringResource(R.string.ui_delete_card))
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.ui_cancel))
             }
         }
     )

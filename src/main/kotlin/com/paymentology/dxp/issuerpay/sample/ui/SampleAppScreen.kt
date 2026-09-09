@@ -48,6 +48,7 @@ import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsViewModel
 import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardContract
 import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardLauncherInput
 import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardResult
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsIntent
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,8 +102,8 @@ fun SampleAppScreen(
     if (showResetDialog.value) {
         AlertDialog(
             onDismissRequest = { showResetDialog.value = false },
-            title = { Text("Reset Token Platform") },
-            text = { Text("This will delete all cards and data, and restart the app. Are you sure?") },
+            title = { Text(stringResource(R.string.ui_reset_token_platform)) },
+            text = { Text(stringResource(R.string.ui_reset_token_platform_message)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -127,12 +128,12 @@ fun SampleAppScreen(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Reset & Close")
+                    Text(stringResource(R.string.ui_reset_token_platform_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetDialog.value = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.ui_cancel))
                 }
             }
         )
@@ -146,7 +147,7 @@ fun SampleAppScreen(
                     IconButton(onClick = { showMenu.value = true }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More options"
+                        contentDescription = stringResource(R.string.ui_more_options)
                         )
                     }
                     DropdownMenu(
@@ -154,7 +155,7 @@ fun SampleAppScreen(
                         onDismissRequest = { showMenu.value = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Reset Token Platform") },
+                            text = { Text(stringResource(R.string.ui_reset_token_platform_menu_item)) },
                             onClick = {
                                 showMenu.value = false
                                 showResetDialog.value = true
@@ -176,7 +177,7 @@ fun SampleAppScreen(
                                 pagerState.animateScrollToPage(index)
                             }
                         },
-                        text = { Text(tab.displayName) }
+                        text = { Text(stringResource(tab.labelRes)) }
                     )
                 }
             }
@@ -202,11 +203,9 @@ fun SampleAppScreen(
                     )
                     DemoTab.Settings -> SettingsScreen(
                         state = settingsState,
-                        onRefresh = { settingsViewModel.dispatch(com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsIntent.Refresh) },
+                        onRefresh = { settingsViewModel.dispatch(SettingsIntent.Refresh) },
                         onSetDefaultPaymentApp = { activity ->
-                            settingsViewModel.dispatch(
-                                com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsIntent.SetDefaultPaymentApp(activity)
-                            )
+                            settingsViewModel.dispatch(SettingsIntent.SetDefaultPaymentApp(activity))
                         },
                         modifier = Modifier.fillMaxSize()
                     )
@@ -216,8 +215,8 @@ fun SampleAppScreen(
     }
 }
 
-enum class DemoTab(val displayName: String) {
-    Digitize("Digitize"),
-    Cards("Cards"),
-    Settings("Settings")
+enum class DemoTab(@param:androidx.annotation.StringRes val labelRes: Int) {
+    Digitize(R.string.ui_digitize_tab),
+    Cards(R.string.ui_cards_tab),
+    Settings(R.string.ui_settings_tab)
 }

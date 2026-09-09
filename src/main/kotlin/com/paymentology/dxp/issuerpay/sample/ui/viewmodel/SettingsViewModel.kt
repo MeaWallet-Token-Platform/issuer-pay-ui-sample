@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.paymentology.dxp.issuerpay.sample.R
 import com.paymentology.dxp.issuerpay.sample.messaging.PushServiceInstanceManagerImpl
 import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
 import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationState
@@ -136,7 +137,7 @@ class SettingsViewModel(
                     _state.update {
                         it.copy(
                             isRefreshing = false,
-                            errorMessage = throwable.message ?: "Failed to load settings"
+                            errorMessage = throwable.message ?: applicationContext.getString(R.string.ui_failed_to_load_settings)
                         )
                     }
                 }
@@ -160,7 +161,7 @@ class SettingsViewModel(
                     Log.e(TAG, "Failed to set default payment application.", throwable)
                     _state.update {
                         it.copy(
-                            errorMessage = throwable.message ?: "Failed to set default payment application"
+                            errorMessage = throwable.message ?: applicationContext.getString(R.string.ui_failed_to_set_default_payment_application)
                         )
                     }
                 }

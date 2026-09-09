@@ -12,7 +12,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.paymentology.dxp.issuerpay.sample.R
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsUiState
 
 @Composable
@@ -29,14 +31,14 @@ fun SettingsScreen(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        SettingRow("SDK Info", state.sdkInfo)
-        SettingRow("Initialized", state.initialized)
-        SettingRow("Registered", state.registered)
-        SettingRow("Msg Token", state.msgToken.ifBlank { "-" })
-        SettingRow("Secure NFC supported", state.secureNfcSupported)
-        SettingRow("Secure NFC enabled", state.secureNfcEnabled)
-        SettingRow("Default Payment App", state.defaultPaymentApp)
-        SettingRow("User auth", state.userAuthenticated)
+        SettingRow(stringResource(R.string.ui_sdk_info_label), state.sdkInfo)
+        SettingRow(stringResource(R.string.ui_initialized_label), state.initialized)
+        SettingRow(stringResource(R.string.ui_registered_label), state.registered)
+        SettingRow(stringResource(R.string.ui_msg_token_label), state.msgToken.ifBlank { "-" })
+        SettingRow(stringResource(R.string.ui_secure_nfc_supported_label), state.secureNfcSupported)
+        SettingRow(stringResource(R.string.ui_secure_nfc_enabled_label), state.secureNfcEnabled)
+        SettingRow(stringResource(R.string.ui_default_payment_app_label), state.defaultPaymentApp)
+        SettingRow(stringResource(R.string.ui_user_auth_label), state.userAuthenticated)
 
         if (!state.isDefaultPaymentApp) {
             OutlinedButton(
@@ -47,7 +49,7 @@ fun SettingsScreen(
                 },
                 modifier = Modifier.padding(top = 16.dp)
             ) {
-                Text("Set as default app")
+                    Text(stringResource(R.string.ui_set_as_default_app))
             }
         }
 
@@ -55,7 +57,7 @@ fun SettingsScreen(
             onClick = onRefresh,
             modifier = Modifier.padding(top = 8.dp)
         ) {
-            Text("Refresh")
+            Text(stringResource(R.string.ui_refresh))
         }
 
         state.errorMessage?.let { message ->
