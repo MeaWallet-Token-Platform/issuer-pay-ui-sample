@@ -29,7 +29,7 @@
         </activity>
 
         <service
-            android:name="com.paymentology.dxp.issuerpay.sample.messaging.MyFcmListenerService"
+            android:name="com.paymentology.dxp.issuerpay.sample.issuerpay.messaging.MyFcmListenerService"
             tools:node="merge"
             android:exported="false">
             <intent-filter>

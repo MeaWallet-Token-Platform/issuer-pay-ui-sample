@@ -1,4 +1,4 @@
-package com.paymentology.dxp.issuerpay.sample.sdk
+package com.paymentology.dxp.issuerpay.sample.issuerpay
 
 import com.meawallet.mtp.MeaCard
 import com.meawallet.mtp.MeaCardReplenishListener
@@ -6,14 +6,17 @@ import com.meawallet.mtp.MeaCardState
 import com.meawallet.mtp.MeaDigitizedCardStateChangeListener
 import com.meawallet.mtp.MeaError
 import com.meawallet.mtp.MeaTokenPlatform
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 
 object SdkCardEvents {
-    private val updates = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(
+    private val updates = MutableSharedFlow<Unit>(
         extraBufferCapacity = 32,
-        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
-    val cardUpdates: kotlinx.coroutines.flow.SharedFlow<Unit> = updates
+    val cardUpdates: SharedFlow<Unit> = updates
 
     fun notifyUpdate() {
         updates.tryEmit(Unit)

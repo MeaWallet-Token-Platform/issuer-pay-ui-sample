@@ -2,13 +2,11 @@ package com.paymentology.dxp.issuerpay.sample.di
 
 import android.content.Context
 import com.paymentology.dxp.issuerpay.sample.SampleApp
-import com.paymentology.dxp.issuerpay.sample.messaging.PushServiceInstanceManagerImpl
-import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
+import com.paymentology.dxp.issuerpay.sample.issuerpay.messaging.PushServiceInstanceManagerImpl
+import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationCoordinator
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.InitializationHelper
 
-import com.paymentology.dxp.issuerpay.ui.compose.core.api.IssuerPayApp
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.MeaTokenPlatformAdapter
-import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 import kotlin.getValue
 
 /**

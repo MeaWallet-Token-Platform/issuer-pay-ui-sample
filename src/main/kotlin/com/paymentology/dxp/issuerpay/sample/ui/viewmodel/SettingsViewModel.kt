@@ -7,9 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.paymentology.dxp.issuerpay.sample.R
-import com.paymentology.dxp.issuerpay.sample.messaging.PushServiceInstanceManagerImpl
-import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
-import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationState
+import com.paymentology.dxp.issuerpay.sample.issuerpay.messaging.PushServiceInstanceManagerImpl
+import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationCoordinator
+import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationState
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.PushServiceInstanceManager
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 import kotlinx.coroutines.Dispatchers

@@ -45,4 +45,7 @@
     <string name="ui_tap_and_pay_active_only">Tap &amp; Pay is only available for ACTIVE cards.</string>
     <string name="ui_failed_to_load_settings">Failed to load settings</string>
     <string name="ui_failed_to_set_default_payment_application">Failed to set default payment application</string>
+    <string name="ui_encrypted_data_loading_failed">Encrypted data loading failed</string>
+    <string name="ui_card_digitized_successfully">✓ Card digitized successfully. Card ID: %1$s</string>
+    <string name="ui_digitization_failed">✗ Digitization failed</string>
 </resources>

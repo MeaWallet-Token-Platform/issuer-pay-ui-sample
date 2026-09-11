@@ -24,9 +24,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
-import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationState
+import com.paymentology.dxp.issuerpay.sample.R
+import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationCoordinator
+import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationState
 import com.paymentology.dxp.issuerpay.sample.utils.EncryptedDataReader
 import com.paymentology.dxp.issuerpay.sample.utils.RandomPanBuilder
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.PlatformError
@@ -48,6 +50,11 @@ fun DigitizeFlowScreen(
     var errorMessage by remember { mutableStateOf("") }
     val registrationState by registrationCoordinator.registrationState.collectAsState()
     val registrationErrorMessage = (registrationState as? RegistrationState.Failed)?.message.orEmpty()
+
+    // Pre-load string resources for use in callbacks
+    val encryptedDataLoadingFailed = stringResource(R.string.ui_encrypted_data_loading_failed)
+    val digitizationFailed = stringResource(R.string.ui_digitization_failed)
+    val digitizationSuccessFormat = stringResource(R.string.ui_card_digitized_successfully)
 
     var selectedDigitizationMethod by remember { mutableStateOf(DigitizationMethod.PAN) }
     var selectedDigitizationOption by remember { mutableStateOf(DigitizationOption.Normal) }
@@ -79,7 +86,7 @@ fun DigitizeFlowScreen(
             encryptedKey = encryptedData.encryptedKey
             initialVector = encryptedData.iv
         } else {
-            errorMessage = "Encrypted data loading failed"
+            errorMessage = encryptedDataLoadingFailed
         }
     }
 
@@ -235,7 +242,7 @@ fun DigitizeFlowScreen(
                         encryptedKey = encryptedData.encryptedKey
                         initialVector = encryptedData.iv
                     } else {
-                        errorMessage = "Encrypted data loading failed"
+                        errorMessage = encryptedDataLoadingFailed
                     }
                 },
                 onLoadFromFile = { encryptedFilePicker.launch("application/json") }
@@ -261,12 +268,12 @@ fun DigitizeFlowScreen(
             params = launcherInput,
             callback = object : CardDigitizationCallback {
                 override fun onCardDigitized(cardId: String) {
-                    cardDigitizationStatus = "✓ Card digitized successfully. Card ID: $cardId"
+                    cardDigitizationStatus = digitizationSuccessFormat.replace("%1\$s", cardId)
                     errorMessage = ""
                 }
 
                 override fun onCardDigitizationFailed(error: PlatformError) {
-                    cardDigitizationStatus = "✗ Digitization failed"
+                    cardDigitizationStatus = digitizationFailed
                     errorMessage = when (error) {
                         is PlatformError.MtpSdkError -> "${error.code}: ${error.message ?: "Unknown error"}"
                         else -> error.javaClass.name

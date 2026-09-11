@@ -1,4 +1,4 @@
-package com.paymentology.dxp.issuerpay.sample.messaging
+package com.paymentology.dxp.issuerpay.sample.issuerpay.messaging
 
 import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.PushServiceInstanceIdGetListener

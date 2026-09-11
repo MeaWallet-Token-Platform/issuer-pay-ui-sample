@@ -10,9 +10,9 @@ import com.meawallet.mtp.MeaCardListener
 import com.meawallet.mtp.MeaCardState
 import com.meawallet.mtp.MeaError
 import com.paymentology.dxp.issuerpay.sample.R
-import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
-import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationState
-import com.paymentology.dxp.issuerpay.sample.sdk.SdkCardEvents
+import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationCoordinator
+import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationState
+import com.paymentology.dxp.issuerpay.sample.issuerpay.SdkCardEvents
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

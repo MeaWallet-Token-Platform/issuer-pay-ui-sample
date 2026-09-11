@@ -1,4 +1,4 @@
-package com.paymentology.dxp.issuerpay.sample.messaging
+package com.paymentology.dxp.issuerpay.sample.issuerpay.messaging
 
 import android.app.Notification
 import android.app.NotificationChannel

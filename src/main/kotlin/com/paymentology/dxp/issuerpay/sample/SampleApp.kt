@@ -1,11 +1,10 @@
 package com.paymentology.dxp.issuerpay.sample
 
 import android.app.Application
-import com.paymentology.dxp.issuerpay.sample.issuerpay.configureCustomUi
 import com.paymentology.dxp.issuerpay.sample.di.AppContainer
 import com.paymentology.dxp.issuerpay.sample.di.AppContainerImpl
 import com.paymentology.dxp.issuerpay.sample.di.AppContainerProvider
-import com.paymentology.dxp.issuerpay.sample.sdk.SdkCardEventSubscriptions
+import com.paymentology.dxp.issuerpay.sample.issuerpay.SdkCardEventSubscriptions
 
 /**
  * Sample application class for the Issuer Pay UI Sample Application.

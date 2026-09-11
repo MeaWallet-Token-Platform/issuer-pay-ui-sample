@@ -39,7 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.paymentology.dxp.issuerpay.sample.R
-import com.paymentology.dxp.issuerpay.sample.sdk.RegistrationCoordinator
+import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationCoordinator
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListEffect
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListIntent
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListViewModel

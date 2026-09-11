@@ -1,4 +1,4 @@
-package com.paymentology.dxp.issuerpay.sample.sdk
+package com.paymentology.dxp.issuerpay.sample.issuerpay
 
 import android.content.Context
 import android.net.ConnectivityManager
