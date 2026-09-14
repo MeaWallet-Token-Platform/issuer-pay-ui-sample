@@ -177,24 +177,16 @@ class SettingsViewModel(
     )
 }
 
-class SettingsViewModelFactory(
-    private val appContext: Context,
-    private val tokenPlatform: TokenPlatform,
-    private val registrationCoordinator: RegistrationCoordinator,
-    private val pushServiceInstanceManager: PushServiceInstanceManager = PushServiceInstanceManagerImpl
-) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return when {
-            modelClass.isAssignableFrom(SettingsViewModel::class.java) -> {
-                SettingsViewModel(
-                    appContext = appContext,
-                    tokenPlatform = tokenPlatform,
-                    registrationCoordinator = registrationCoordinator,
-                    pushServiceInstanceManager = pushServiceInstanceManager
-                ) as T
-            }
-            else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
-        }
-    }
+fun settingsViewModelFactory(
+    appContext: Context,
+    tokenPlatform: TokenPlatform,
+    registrationCoordinator: RegistrationCoordinator,
+    pushServiceInstanceManager: PushServiceInstanceManager = PushServiceInstanceManagerImpl
+): ViewModelProvider.Factory = viewModelFactory {
+    SettingsViewModel(
+        appContext = appContext,
+        tokenPlatform = tokenPlatform,
+        registrationCoordinator = registrationCoordinator,
+        pushServiceInstanceManager = pushServiceInstanceManager
+    )
 }

@@ -331,18 +331,14 @@ class CardListViewModel(
     }
 }
 
-class CardListViewModelFactory(
-    private val appContext: Context,
-    private val tokenPlatform: TokenPlatform,
-    private val registrationCoordinator: RegistrationCoordinator
-) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return when {
-            modelClass.isAssignableFrom(CardListViewModel::class.java) -> {
-                CardListViewModel(appContext, tokenPlatform, registrationCoordinator) as T
-            }
-            else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
-        }
-    }
+fun cardListViewModelFactory(
+    appContext: Context,
+    tokenPlatform: TokenPlatform,
+    registrationCoordinator: RegistrationCoordinator
+): ViewModelProvider.Factory = viewModelFactory {
+    CardListViewModel(
+        appContext = appContext,
+        tokenPlatform = tokenPlatform,
+        registrationCoordinator = registrationCoordinator
+    )
 }

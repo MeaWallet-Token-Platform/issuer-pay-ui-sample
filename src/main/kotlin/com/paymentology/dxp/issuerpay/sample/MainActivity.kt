@@ -16,9 +16,9 @@ import com.paymentology.dxp.issuerpay.sample.di.appContainer
 import com.paymentology.dxp.issuerpay.sample.issuerpay.messaging.PushServiceInstanceManagerImpl
 import com.paymentology.dxp.issuerpay.sample.ui.SampleAppScreen
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListViewModel
-import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListViewModelFactory
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsViewModel
-import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsViewModelFactory
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.cardListViewModelFactory
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.settingsViewModelFactory
 import com.paymentology.dxp.issuerpay.sample.ui.theme.MyComposeAppTheme
 
 
@@ -37,10 +37,14 @@ class MainActivity : ComponentActivity() {
     private var showResetDialog by mutableStateOf(false)
 
     private val cardListViewModel: CardListViewModel by viewModels {
-        CardListViewModelFactory(applicationContext, tokenPlatform, registrationCoordinator)
+        cardListViewModelFactory(
+            appContext = applicationContext,
+            tokenPlatform = tokenPlatform,
+            registrationCoordinator = registrationCoordinator
+        )
     }
     private val settingsViewModel: SettingsViewModel by viewModels {
-        SettingsViewModelFactory(
+        settingsViewModelFactory(
             appContext = applicationContext,
             tokenPlatform = tokenPlatform,
             registrationCoordinator = registrationCoordinator,
