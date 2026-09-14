@@ -9,7 +9,7 @@ Complete documentation: [Developer portal](https://developer.meawallet.com/mtp/o
 Use this project as a reference when integrating Issuer Pay UI into a client app or when reviewing 
 the expected wiring around wallet registration, push handling, and digitization flows.
 
-## Getting started
+## What's included
 
 - Issuer Pay UI Compose integration
 - Wallet registration flow

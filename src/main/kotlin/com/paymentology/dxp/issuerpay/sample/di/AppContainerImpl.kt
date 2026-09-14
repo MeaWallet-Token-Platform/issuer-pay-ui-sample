@@ -17,9 +17,6 @@ import kotlin.getValue
 class AppContainerImpl(
     private val appContext: Context
 ) : AppContainer {
-    private val sampleApp: SampleApp
-        get() = appContext.applicationContext as SampleApp
-
     override val tokenPlatform by lazy { MeaTokenPlatformAdapter() }
 
     override val initializationHelper: InitializationHelper by lazy {

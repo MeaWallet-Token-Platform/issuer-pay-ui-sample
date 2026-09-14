@@ -15,7 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,6 +25,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.paymentology.dxp.issuerpay.sample.R
 import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationCoordinator
 import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationState
@@ -48,7 +48,7 @@ fun DigitizeFlowScreen(
     val context = LocalContext.current
     var cardDigitizationStatus by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
-    val registrationState by registrationCoordinator.registrationState.collectAsState()
+    val registrationState by registrationCoordinator.registrationState.collectAsStateWithLifecycle()
     val registrationErrorMessage = (registrationState as? RegistrationState.Failed)
         ?.reason
         ?.toDisplayErrorText()

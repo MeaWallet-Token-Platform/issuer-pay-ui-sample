@@ -25,12 +25,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.paymentology.dxp.issuerpay.sample.R
@@ -64,8 +64,8 @@ fun SampleAppScreen(
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
     val showMenu = remember { mutableStateOf(false) }
-    val cardState by cardListViewModel.state.collectAsState()
-    val settingsState by settingsViewModel.state.collectAsState()
+    val cardState by cardListViewModel.state.collectAsStateWithLifecycle()
+    val settingsState by settingsViewModel.state.collectAsStateWithLifecycle()
     val paymentLauncher = rememberLauncherForActivityResult(
         contract = PayByCardContract(),
         onResult = { result ->
