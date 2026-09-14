@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.paymentology.dxp.issuerpay.sample.R
+import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationFailureReason
 import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationCoordinator
 import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationState
 import com.paymentology.dxp.issuerpay.sample.utils.EncryptedDataReader
@@ -49,12 +50,22 @@ fun DigitizeFlowScreen(
     var cardDigitizationStatus by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
     val registrationState by registrationCoordinator.registrationState.collectAsState()
-    val registrationErrorMessage = (registrationState as? RegistrationState.Failed)?.message.orEmpty()
+    val registrationErrorMessage = (registrationState as? RegistrationState.Failed)
+        ?.reason
+        ?.toDisplayErrorText()
+        .orEmpty()
 
     // Pre-load string resources for use in callbacks
     val encryptedDataLoadingFailed = stringResource(R.string.ui_encrypted_data_loading_failed)
     val digitizationFailed = stringResource(R.string.ui_digitization_failed)
     val digitizationSuccessFormat = stringResource(R.string.ui_card_digitized_successfully)
+    val digitizationUnknownError = stringResource(R.string.ui_unknown_error)
+    val userCancelled = stringResource(R.string.ui_user_cancelled)
+    val digitizationMethodLabels = mapOf(
+        DigitizationMethod.PAN to stringResource(R.string.ui_digitization_method_pan),
+        DigitizationMethod.CARD_ID to stringResource(R.string.ui_digitization_method_card_id),
+        DigitizationMethod.ENCRYPTED_PAN to stringResource(R.string.ui_digitization_method_encrypted_pan)
+    )
 
     var selectedDigitizationMethod by remember { mutableStateOf(DigitizationMethod.PAN) }
     var selectedDigitizationOption by remember { mutableStateOf(DigitizationOption.Normal) }
@@ -165,17 +176,17 @@ fun DigitizeFlowScreen(
         verticalArrangement = Arrangement.Top
     ) {
         Text(
-            text = "Digitization Flow",
+            text = stringResource(R.string.ui_digitization_flow_title),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
         M3ExposedDropdown(
-            label = "Choose digitization method",
+            label = stringResource(R.string.ui_choose_digitization_method),
             options = DigitizationMethod.entries,
             selected = selectedDigitizationMethod,
             onSelected = { selectedDigitizationMethod = it },
-            optionLabel = { it.label },
+            optionLabel = { digitizationMethodLabels[it].orEmpty() },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -252,7 +263,10 @@ fun DigitizeFlowScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Registration: ${registrationState.toDisplayLabel()}",
+            text = stringResource(
+                R.string.ui_registration_label,
+                registrationState.toDisplayLabel()
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -262,7 +276,7 @@ fun DigitizeFlowScreen(
         // Primary client integration #3:
         // Invoke the library flow entrypoint via CardDigitizationButton.
         CardDigitizationButton(
-            label = "Digitize Card",
+            label = stringResource(R.string.ui_digitize_card),
             enabled = registrationState == RegistrationState.Registered,
             modifier = Modifier.fillMaxWidth(),
             params = launcherInput,
@@ -275,14 +289,14 @@ fun DigitizeFlowScreen(
                 override fun onCardDigitizationFailed(error: PlatformError) {
                     cardDigitizationStatus = digitizationFailed
                     errorMessage = when (error) {
-                        is PlatformError.MtpSdkError -> "${error.code}: ${error.message ?: "Unknown error"}"
+                        is PlatformError.MtpSdkError -> "${error.code}: ${error.message ?: digitizationUnknownError}"
                         else -> error.javaClass.name
                     }
                     registrationCoordinator.ensureRegistered()
                 }
 
                 override fun onUserCancelled() {
-                    cardDigitizationStatus = "User cancelled"
+                    cardDigitizationStatus = userCancelled
                     errorMessage = ""
                 }
             }
@@ -301,7 +315,7 @@ fun DigitizeFlowScreen(
 
         if (visibleErrorMessage.isNotEmpty()) {
             Text(
-                text = "Error: $visibleErrorMessage",
+                text = stringResource(R.string.ui_error_prefix, visibleErrorMessage),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 16.dp)
@@ -311,9 +325,19 @@ fun DigitizeFlowScreen(
 
 }
 
+@Composable
 private fun RegistrationState.toDisplayLabel(): String = when (this) {
-    RegistrationState.Registered -> "Registered"
-    RegistrationState.Registering -> "Registering"
-    RegistrationState.Unregistered -> "Not registered"
-    is RegistrationState.Failed -> "Not registered"
+    RegistrationState.Registered -> stringResource(R.string.ui_registration_registered)
+    RegistrationState.Registering -> stringResource(R.string.ui_registration_registering)
+    RegistrationState.Unregistered -> stringResource(R.string.ui_registration_not_registered)
+    is RegistrationState.Failed -> stringResource(R.string.ui_registration_not_registered)
+}
+
+@Composable
+private fun RegistrationFailureReason.toDisplayErrorText(): String = when (this) {
+    RegistrationFailureReason.NoNetwork -> stringResource(R.string.ui_registration_error_no_network)
+    RegistrationFailureReason.MissingNetworkPermission -> stringResource(R.string.ui_registration_error_missing_network_permission)
+    RegistrationFailureReason.NetworkMonitorUnavailable -> stringResource(R.string.ui_registration_error_network_monitor_unavailable)
+    RegistrationFailureReason.RegistrationFailed -> stringResource(R.string.ui_registration_error_failed)
+    RegistrationFailureReason.RegistrationTimedOut -> stringResource(R.string.ui_registration_error_timed_out)
 }

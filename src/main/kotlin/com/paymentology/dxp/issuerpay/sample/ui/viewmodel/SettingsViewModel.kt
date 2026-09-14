@@ -23,14 +23,13 @@ import kotlinx.coroutines.withContext
 
 data class SettingsUiState(
     val sdkInfo: String = "-",
-    val initialized: String = "-",
-    val registered: String = "-",
-    val msgToken: String = "-",
-    val secureNfcSupported: String = "-",
-    val secureNfcEnabled: String = "-",
-    val defaultPaymentApp: String = "-",
-    val userAuthenticated: String = "-",
-    val isDefaultPaymentApp: Boolean = false,
+    val initialized: Boolean? = null,
+    val registrationState: RegistrationState = RegistrationState.Unregistered,
+    val msgToken: String = "",
+    val secureNfcSupported: Boolean? = null,
+    val secureNfcEnabled: Boolean? = null,
+    val isDefaultPaymentApp: Boolean? = null,
+    val userAuthenticated: Boolean? = null,
     val errorMessage: String? = null,
     val isRefreshing: Boolean = false
 )
@@ -73,7 +72,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             registrationCoordinator.registrationState.collectLatest { registrationState ->
                 _state.update { current ->
-                    current.copy(registered = registrationState.toRegisteredDisplayText())
+                    current.copy(registrationState = registrationState)
                 }
 
                 if (registrationState == RegistrationState.Registered) {
@@ -86,7 +85,7 @@ class SettingsViewModel(
     private fun observePushToken() {
         viewModelScope.launch {
             pushServiceInstanceManager.getObservableIdToken(viewModelScope).collectLatest { token ->
-                _state.update { it.copy(msgToken = token.ifBlank { "-" }) }
+                _state.update { it.copy(msgToken = token) }
             }
         }
     }
@@ -103,14 +102,14 @@ class SettingsViewModel(
                             tokenPlatform.configuration.buildType(),
                             tokenPlatform.configuration.cdCvmModel()
                         ).joinToString("; "),
-                        initialized = tokenPlatform.isInitialized().toString(),
-                        secureNfcSupported = tokenPlatform.isSecureNfcSupported().toString(),
-                        secureNfcEnabled = tokenPlatform.isSecureNfcEnabled().toString(),
-                        defaultPaymentApp = tokenPlatform.isDefaultPaymentApplication(applicationContext).toString(),
+                        initialized = tokenPlatform.isInitialized(),
+                        secureNfcSupported = tokenPlatform.isSecureNfcSupported(),
+                        secureNfcEnabled = tokenPlatform.isSecureNfcEnabled(),
+                        isDefaultPaymentApp = tokenPlatform.isDefaultPaymentApplication(applicationContext),
                         userAuthenticated = if (tokenPlatform.isInitialized()) {
-                            tokenPlatform.cdCvm.isCardholderAuthenticated().toString()
+                            tokenPlatform.cdCvm.isCardholderAuthenticated()
                         } else {
-                            "false"
+                            false
                         }
                     )
                 }
@@ -124,9 +123,8 @@ class SettingsViewModel(
                             initialized = snapshot.initialized,
                             secureNfcSupported = snapshot.secureNfcSupported,
                             secureNfcEnabled = snapshot.secureNfcEnabled,
-                            defaultPaymentApp = snapshot.defaultPaymentApp,
+                            isDefaultPaymentApp = snapshot.isDefaultPaymentApp,
                             userAuthenticated = snapshot.userAuthenticated,
-                            isDefaultPaymentApp = snapshot.defaultPaymentApp.equals("true", ignoreCase = true),
                             isRefreshing = false,
                             errorMessage = null
                         )
@@ -171,19 +169,12 @@ class SettingsViewModel(
 
     private data class SettingsSnapshot(
         val sdkInfo: String,
-        val initialized: String,
-        val secureNfcSupported: String,
-        val secureNfcEnabled: String,
-        val defaultPaymentApp: String,
-        val userAuthenticated: String
+        val initialized: Boolean,
+        val secureNfcSupported: Boolean,
+        val secureNfcEnabled: Boolean,
+        val isDefaultPaymentApp: Boolean,
+        val userAuthenticated: Boolean
     )
-
-    private fun RegistrationState.toRegisteredDisplayText(): String = when (this) {
-        RegistrationState.Registered -> "true"
-        RegistrationState.Registering -> "registering"
-        RegistrationState.Unregistered -> "false"
-        is RegistrationState.Failed -> "false"
-    }
 }
 
 class SettingsViewModelFactory(

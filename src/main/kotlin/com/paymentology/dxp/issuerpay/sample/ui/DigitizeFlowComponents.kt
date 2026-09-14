@@ -13,7 +13,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.paymentology.dxp.issuerpay.sample.R
 
 
 @Composable
@@ -35,30 +37,40 @@ internal fun PanDigitizationSection(
     selectedYear: Int,
     onSelectedYear: (Int) -> Unit
 ) {
+    val digitizationOptionLabels = mapOf(
+        DigitizationOption.Normal to stringResource(R.string.ui_digitization_option_normal),
+        DigitizationOption.YellowFlow to stringResource(R.string.ui_digitization_option_yellow_flow),
+        DigitizationOption.RedFlow to stringResource(R.string.ui_digitization_option_red_flow)
+    )
+    val paymentNetworkLabels = mapOf(
+        PaymentNetwork.Mastercard to stringResource(R.string.ui_payment_network_mastercard),
+        PaymentNetwork.Visa to stringResource(R.string.ui_payment_network_visa)
+    )
+
     M3ExposedDropdown(
-        label = "Choose digitization type",
+        label = stringResource(R.string.ui_choose_digitization_type),
         options = DigitizationOption.entries,
         selected = selectedDigitizationOption,
         onSelected = onSelectedDigitizationOption,
-        optionLabel = { it.label },
+        optionLabel = { digitizationOptionLabels[it].orEmpty() },
         modifier = Modifier.fillMaxWidth()
     )
 
     Spacer(modifier = Modifier.height(8.dp))
 
     M3ExposedDropdown(
-        label = "Choose payment network",
+        label = stringResource(R.string.ui_choose_payment_network),
         options = PaymentNetwork.entries,
         selected = selectedNetwork,
         onSelected = onSelectedNetwork,
-        optionLabel = { it.label },
+        optionLabel = { paymentNetworkLabels[it].orEmpty() },
         modifier = Modifier.fillMaxWidth()
     )
 
     Spacer(modifier = Modifier.height(8.dp))
 
     LabeledInputWithGetButton(
-        label = "Card PAN",
+        label = stringResource(R.string.ui_card_pan),
         value = pan,
         onValueChange = onPanChange,
         onGetClick = onPanGenerate
@@ -67,7 +79,7 @@ internal fun PanDigitizationSection(
     Spacer(modifier = Modifier.height(8.dp))
 
     LabeledInputWithGetButton(
-        label = "Cardholder name",
+        label = stringResource(R.string.ui_cardholder_name),
         value = cardholderName,
         onValueChange = onCardholderNameChange,
         onGetClick = onCardholderNameGenerate
@@ -77,7 +89,7 @@ internal fun PanDigitizationSection(
 
     Row(modifier = Modifier.fillMaxWidth()) {
         M3ExposedDropdown(
-            label = "Valid thru month",
+            label = stringResource(R.string.ui_valid_thru_month),
             options = monthOptions,
             selected = selectedMonth,
             onSelected = onSelectedMonth,
@@ -86,7 +98,7 @@ internal fun PanDigitizationSection(
         )
         Spacer(modifier = Modifier.width(8.dp))
         M3ExposedDropdown(
-            label = "Valid thru year",
+            label = stringResource(R.string.ui_valid_thru_year),
             options = yearOptions,
             selected = selectedYear,
             onSelected = onSelectedYear,
@@ -109,7 +121,7 @@ internal fun CardIdDigitizationSection(
     onCardBinGenerate: () -> Unit
 ) {
     LabeledInputWithGetButton(
-        label = "Card Id",
+        label = stringResource(R.string.ui_card_id),
         value = cardId,
         onValueChange = onCardIdChange,
         onGetClick = onCardIdGenerate
@@ -118,7 +130,7 @@ internal fun CardIdDigitizationSection(
     Spacer(modifier = Modifier.height(8.dp))
 
     LabeledInputWithGetButton(
-        label = "Card secret",
+        label = stringResource(R.string.ui_card_secret),
         value = cardSecret,
         onValueChange = onCardSecretChange,
         onGetClick = onCardSecretGenerate
@@ -127,7 +139,7 @@ internal fun CardIdDigitizationSection(
     Spacer(modifier = Modifier.height(8.dp))
 
     LabeledInputWithGetButton(
-        label = "Bin",
+        label = stringResource(R.string.ui_bin),
         value = cardBin,
         onValueChange = onCardBinChange,
         onGetClick = onCardBinGenerate
@@ -150,7 +162,7 @@ internal fun EncryptedPanDigitizationSection(
     OutlinedTextField(
         value = encryptedCardData,
         onValueChange = onEncryptedCardDataChange,
-        label = { Text("Encrypted card data") },
+        label = { Text(stringResource(R.string.ui_encrypted_card_data)) },
         modifier = Modifier.fillMaxWidth(),
         minLines = 2
     )
@@ -160,7 +172,7 @@ internal fun EncryptedPanDigitizationSection(
     OutlinedTextField(
         value = publicKeyFingerprint,
         onValueChange = onPublicKeyFingerprintChange,
-        label = { Text("Public key fingerprint") },
+        label = { Text(stringResource(R.string.ui_public_key_fingerprint)) },
         modifier = Modifier.fillMaxWidth()
     )
 
@@ -169,7 +181,7 @@ internal fun EncryptedPanDigitizationSection(
     OutlinedTextField(
         value = encryptedKey,
         onValueChange = onEncryptedKeyChange,
-        label = { Text("Encrypted key") },
+        label = { Text(stringResource(R.string.ui_encrypted_key)) },
         modifier = Modifier.fillMaxWidth(),
         minLines = 2
     )
@@ -179,7 +191,7 @@ internal fun EncryptedPanDigitizationSection(
     OutlinedTextField(
         value = initialVector,
         onValueChange = onInitialVectorChange,
-        label = { Text("Initial vector") },
+        label = { Text(stringResource(R.string.ui_initial_vector)) },
         modifier = Modifier.fillMaxWidth()
     )
 
@@ -190,7 +202,7 @@ internal fun EncryptedPanDigitizationSection(
             onClick = onGetStaticData,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("GET STATIC DATA")
+            Text(stringResource(R.string.ui_get_static_data))
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -199,7 +211,7 @@ internal fun EncryptedPanDigitizationSection(
             onClick = onLoadFromFile,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("LOAD FROM FILE")
+            Text(stringResource(R.string.ui_load_from_file))
         }
     }
 }
@@ -222,7 +234,7 @@ private fun LabeledInputWithGetButton(
         Spacer(modifier = Modifier.width(8.dp))
 
         Button(onClick = onGetClick, modifier = Modifier.padding(top = 8.dp)) {
-            Text("GET")
+            Text(stringResource(R.string.ui_get))
         }
     }
 }

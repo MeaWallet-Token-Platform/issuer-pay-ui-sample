@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +28,18 @@ sealed interface RegistrationState {
     data object Unregistered : RegistrationState
     data object Registering : RegistrationState
     data object Registered : RegistrationState
-    data class Failed(val message: String) : RegistrationState
+    data class Failed(
+        val reason: RegistrationFailureReason,
+        val details: String? = null
+    ) : RegistrationState
+}
+
+enum class RegistrationFailureReason {
+    NoNetwork,
+    MissingNetworkPermission,
+    NetworkMonitorUnavailable,
+    RegistrationFailed,
+    RegistrationTimedOut
 }
 
 class RegistrationCoordinator(
@@ -68,7 +80,7 @@ class RegistrationCoordinator(
         override fun onLost(network: Network) {
             if (!isNetworkAvailable() && !isCurrentlyRegistered()) {
                 _registrationState.value = RegistrationState.Failed(
-                    "No network connection. Connect to internet and retry registration."
+                    reason = RegistrationFailureReason.NoNetwork
                 )
             }
         }
@@ -120,7 +132,7 @@ class RegistrationCoordinator(
 
                 if (!isNetworkAvailable()) {
                     _registrationState.value = RegistrationState.Failed(
-                        "No network connection. Connect to internet and retry registration."
+                        reason = RegistrationFailureReason.NoNetwork
                     )
                     return@withLock
                 }
@@ -141,9 +153,16 @@ class RegistrationCoordinator(
                 if (waitUntilRegistered()) {
                     _registrationState.value = RegistrationState.Registered
                 } else {
+                    val failure = registrationResult.exceptionOrNull()
+                    val reason = if (failure is TimeoutCancellationException) {
+                        RegistrationFailureReason.RegistrationTimedOut
+                    } else {
+                        RegistrationFailureReason.RegistrationFailed
+                    }
+
                     _registrationState.value = RegistrationState.Failed(
-                        registrationResult.exceptionOrNull()?.message
-                            ?: "Registration failed. Please retry."
+                        reason = reason,
+                        details = failure?.message
                     )
                 }
             }
@@ -183,11 +202,11 @@ class RegistrationCoordinator(
             isNetworkCallbackRegistered = true
         } catch (_: SecurityException) {
             _registrationState.value = RegistrationState.Failed(
-                "Missing permission to monitor network state."
+                reason = RegistrationFailureReason.MissingNetworkPermission
             )
         } catch (_: IllegalArgumentException) {
             _registrationState.value = RegistrationState.Failed(
-                "Unable to monitor network state."
+                reason = RegistrationFailureReason.NetworkMonitorUnavailable
             )
         }
     }
