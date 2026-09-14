@@ -90,4 +90,6 @@
     <string name="ui_value_true">true</string>
     <string name="ui_value_false">false</string>
     <string name="ui_value_unknown">-</string>
+    <string name="ui_value_unknown_name">Unknown</string>
+    <string name="ui_value_not_available">N/A</string>
 </resources>

@@ -4,7 +4,7 @@ import android.app.Application
 import com.paymentology.dxp.issuerpay.sample.di.AppContainer
 import com.paymentology.dxp.issuerpay.sample.di.AppContainerImpl
 import com.paymentology.dxp.issuerpay.sample.di.AppContainerProvider
-import com.paymentology.dxp.issuerpay.sample.issuerpay.SdkCardEventSubscriptions
+import com.paymentology.dxp.issuerpay.sample.issuerpay.CardEventSubscriptions
 
 /**
  * Sample application class for the Issuer Pay UI Sample Application.
@@ -26,7 +26,7 @@ class SampleApp : Application(), AppContainerProvider {
 
         // Initialize the platform and SDK. This is required for the SDK to work properly.
         appContainer.initializationHelper.initializePlatform()
-        SdkCardEventSubscriptions.subscribeToCardEvents()
+        CardEventSubscriptions.subscribeToCardEvents()
         appContainer.registrationCoordinator.start()
 
 
@@ -35,7 +35,7 @@ class SampleApp : Application(), AppContainerProvider {
 
     override fun onTerminate() {
         appContainer.registrationCoordinator.stop()
-        SdkCardEventSubscriptions.unsubscribeFromCardEvents()
+        CardEventSubscriptions.unsubscribeFromCardEvents()
         super.onTerminate()
     }
 }

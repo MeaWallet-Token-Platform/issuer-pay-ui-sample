@@ -1,10 +1,6 @@
 package com.paymentology.dxp.issuerpay.sample.ui
 
-import android.os.Handler
-import android.os.Looper
-import android.os.Process
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,14 +32,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.paymentology.dxp.issuerpay.sample.R
 import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationCoordinator
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListEffect
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListIntent
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListViewModel
-import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsViewModel
 import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardContract
 import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardLauncherInput
@@ -54,10 +48,13 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SampleAppScreen(
-    tokenPlatform: TokenPlatform,
     registrationCoordinator: RegistrationCoordinator,
     cardListViewModel: CardListViewModel,
-    settingsViewModel: SettingsViewModel
+    settingsViewModel: SettingsViewModel,
+    showResetDialog: Boolean,
+    onOpenResetDialog: () -> Unit,
+    onDismissResetDialog: () -> Unit,
+    onConfirmReset: () -> Unit
 ) {
     val tabs = listOf(
         DemoTab.Digitize,
@@ -67,8 +64,6 @@ fun SampleAppScreen(
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
     val showMenu = remember { mutableStateOf(false) }
-    val showResetDialog = remember { mutableStateOf(false) }
-    val context = LocalContext.current
     val cardState by cardListViewModel.state.collectAsState()
     val settingsState by settingsViewModel.state.collectAsState()
     val paymentLauncher = rememberLauncherForActivityResult(
@@ -99,31 +94,14 @@ fun SampleAppScreen(
         }
     }
 
-    if (showResetDialog.value) {
+    if (showResetDialog) {
         AlertDialog(
-            onDismissRequest = { showResetDialog.value = false },
+            onDismissRequest = onDismissResetDialog,
             title = { Text(stringResource(R.string.ui_reset_token_platform)) },
             text = { Text(stringResource(R.string.ui_reset_token_platform_message)) },
             confirmButton = {
                 Button(
-                    onClick = {
-                        showResetDialog.value = false
-                        try {
-                            Log.d("SampleAppScreen", "Deleting token platform data...")
-                            tokenPlatform.delete(null)
-                            Log.d("SampleAppScreen", "Token platform data deleted successfully")
-                        } catch (e: Exception) {
-                            Log.e("SampleAppScreen", "Error deleting token platform", e)
-                        }
-
-                        if (context is ComponentActivity) {
-                            context.finish()
-                        }
-
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            Process.killProcess(Process.myPid())
-                        }, 100)
-                    },
+                    onClick = onConfirmReset,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
                     )
@@ -132,7 +110,7 @@ fun SampleAppScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showResetDialog.value = false }) {
+                TextButton(onClick = onDismissResetDialog) {
                     Text(stringResource(R.string.ui_cancel))
                 }
             }
@@ -158,7 +136,7 @@ fun SampleAppScreen(
                             text = { Text(stringResource(R.string.ui_reset_token_platform_menu_item)) },
                             onClick = {
                                 showMenu.value = false
-                                showResetDialog.value = true
+                                onOpenResetDialog()
                             }
                         )
                     }

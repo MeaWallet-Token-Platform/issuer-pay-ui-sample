@@ -10,7 +10,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
-object SdkCardEvents {
+object CardEvents {
     private val updates = MutableSharedFlow<Unit>(
         extraBufferCapacity = 32,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
@@ -23,22 +23,22 @@ object SdkCardEvents {
     }
 }
 
-object SdkCardEventSubscriptions {
+object CardEventSubscriptions {
     private var areEventSubscriptionsActive = false
 
     private val replenishListener = object : MeaCardReplenishListener {
         override fun onReplenishCompleted(meaCard: MeaCard, numberOfPaymentTokens: Int) {
-            SdkCardEvents.notifyUpdate()
+            CardEvents.notifyUpdate()
         }
 
         override fun onReplenishFailed(meaCard: MeaCard, error: MeaError) {
-            SdkCardEvents.notifyUpdate()
+            CardEvents.notifyUpdate()
         }
     }
 
     private val stateChangeListener = object : MeaDigitizedCardStateChangeListener {
         override fun onStateChanged(card: MeaCard, newState: MeaCardState) {
-            SdkCardEvents.notifyUpdate()
+            CardEvents.notifyUpdate()
         }
     }
 

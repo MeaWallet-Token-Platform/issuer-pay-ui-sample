@@ -12,7 +12,7 @@ import com.meawallet.mtp.MeaError
 import com.paymentology.dxp.issuerpay.sample.R
 import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationCoordinator
 import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationState
-import com.paymentology.dxp.issuerpay.sample.issuerpay.SdkCardEvents
+import com.paymentology.dxp.issuerpay.sample.issuerpay.CardEvents
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -114,7 +114,7 @@ class CardListViewModel(
 
     private fun observeCardEvents() {
         viewModelScope.launch {
-            SdkCardEvents.cardUpdates.collectLatest {
+            CardEvents.cardUpdates.collectLatest {
                 dispatch(CardListIntent.Refresh)
             }
         }
@@ -292,29 +292,32 @@ class CardListViewModel(
     }
 
     private fun MeaCard.paymentNetworkName(): String {
+        val unknown = applicationContext.getString(R.string.ui_value_unknown_name)
         return try {
-            paymentNetwork?.name ?: "Unknown"
+            paymentNetwork?.name ?: unknown
         } catch (exception: Exception) {
             Log.w(TAG, "Failed to read payment network for $id", exception)
-            "Unknown"
+            unknown
         }
     }
 
     private fun MeaCard.statusText(): String {
+        val unknown = applicationContext.getString(R.string.ui_value_unknown_name)
         return try {
-            state?.name ?: "Unknown"
+            state?.name ?: unknown
         } catch (exception: Exception) {
             Log.w(TAG, "Failed to read state for $id", exception)
-            "Unknown"
+            unknown
         }
     }
 
     private fun MeaCard.remainingTokensText(): String {
+        val notAvailable = applicationContext.getString(R.string.ui_value_not_available)
         return try {
-            transactionCredentialsCount?.toString() ?: "N/A"
+            transactionCredentialsCount?.toString() ?: notAvailable
         } catch (exception: Exception) {
             Log.w(TAG, "Failed to read token count for $id", exception)
-            "N/A"
+            notAvailable
         }
     }
 
