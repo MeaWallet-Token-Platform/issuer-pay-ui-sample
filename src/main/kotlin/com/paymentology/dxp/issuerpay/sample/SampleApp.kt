@@ -5,6 +5,7 @@ import com.paymentology.dxp.issuerpay.sample.di.AppContainer
 import com.paymentology.dxp.issuerpay.sample.di.AppContainerImpl
 import com.paymentology.dxp.issuerpay.sample.di.AppContainerProvider
 import com.paymentology.dxp.issuerpay.sample.issuerpay.CardEventSubscriptions
+import com.paymentology.dxp.issuerpay.ui.compose.core.api.IssuerPayUi
 
 /**
  * Sample application class for the Issuer Pay UI Sample Application.
@@ -25,7 +26,7 @@ class SampleApp : Application(), AppContainerProvider {
         super.onCreate()
 
         // Initialize the platform and SDK. This is required for the SDK to work properly.
-        appContainer.initializationHelper.initializePlatform()
+        IssuerPayUi.initialize(this)
         CardEventSubscriptions.subscribeToCardEvents()
         appContainer.registrationCoordinator.start()
 
