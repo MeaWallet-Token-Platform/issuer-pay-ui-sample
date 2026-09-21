@@ -76,10 +76,10 @@ fun configureCustomUi() {
     /**
      * Content for the digitization failure screen.
      *
-     * Property type: `@Composable (String?) -> Unit`.
+     * Property type: `@Composable ( FailureUiModel?) -> Unit`.
      * Displayed when digitization fails.
      *
-     * @param errorMessage Failure reason as `String?`; nullable when SDK does not provide details.
+     * @param errorMessage Failure reason as `FailureUiModel?`; nullable when SDK does not provide details.
      */
     UiComposeConfigHolderImpl.digitizationFailedContent = { errorMessage ->
         Text("Digitization failed: ${errorMessage?.message ?: "unknown error"}")
