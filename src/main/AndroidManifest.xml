@@ -4,6 +4,7 @@
     package="com.paymentology.dxp.issuerpay.sample">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name="com.paymentology.dxp.issuerpay.sample.SampleApp"
@@ -28,7 +29,7 @@
         </activity>
 
         <service
-            android:name="com.paymentology.dxp.issuerpay.sample.messaging.MyFcmListenerService"
+            android:name="com.paymentology.dxp.issuerpay.sample.issuerpay.messaging.MyFcmListenerService"
             tools:node="merge"
             android:exported="false">
             <intent-filter>

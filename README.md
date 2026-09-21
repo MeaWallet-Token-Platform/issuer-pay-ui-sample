@@ -9,13 +9,54 @@ Complete documentation: [Developer portal](https://developer.meawallet.com/mtp/o
 Use this project as a reference when integrating Issuer Pay UI into a client app or when reviewing 
 the expected wiring around wallet registration, push handling, and digitization flows.
 
-## Getting started
+## What's included
 
 - Issuer Pay UI Compose integration
 - Wallet registration flow
 - Firebase push handling
 - Sample digitization flows and card UI
 - Application-level dependency injection (`sample/di`) for shared SDK services
+
+## Integration copy path (recommended order)
+
+1. **App initialization**
+   - `SampleApp.kt`
+   - `di/AppContainer.kt`, `di/AppContainerImpl.kt`
+   - Initialize SDK once in application lifecycle, create app-scoped dependencies, start registration + card event subscriptions.
+2. **Registration lifecycle**
+   - `issuerpay/RegistrationCoordinator.kt`
+   - `issuerpay/messaging/PushServiceInstanceManagerImpl.kt` (`PushServiceInstanceManager`)
+   - Keep wallet registration state app-scoped, and provide push token access used by registration and token refresh flows.
+   - Retry registration on connectivity/app resume.
+3. **Push handling**
+   - `issuerpay/messaging/MyFcmListenerService.kt`
+   - `issuerpay/messaging/PushMessageCoordinator.kt`
+   - `issuerpay/messaging/PushServiceInstanceManagerImpl.kt` (`PushServiceInstanceManager`) for FCM token acquisition and refresh propagation to SDK registration/update flows.
+   - Keep FCM service thin and delegate all message parsing/routing to coordinator.
+4. **Card update events**
+   - `issuerpay/CardEventSubscriptions.kt`
+   - Subscribe to SDK replenish/state-change callbacks and fan out updates through `CardEvents`.
+5. **State management (MVI-style)**
+   - `ui/viewmodel/CardListViewModel.kt`
+   - `ui/viewmodel/SettingsViewModel.kt`
+   - Handle SDK calls in ViewModels, expose typed UI state + one-off effects to screens.
+6. **UI shell and screens**
+   - `MainActivity.kt`
+   - `ui/SampleAppScreen.kt`, `ui/CardListScreen.kt`, `ui/SettingsScreen.kt`, `ui/DigitizeFlowScreen.kt`
+   - Keep activity/shell responsible for wiring and side effects; keep feature screens render-focused.
+
+## Replace sample values before production
+
+- `build.gradle.kts`: replace legacy `applicationId` and simulator SDK dependency.
+- `settings.gradle.kts`: replace sample Nexus repository credentials.
+- `src/main/google-services.json`: use your Firebase project configuration.
+- `ui/DigitizeFlowScreen.kt` and related sample generators: replace demo card/cardholder test values.
+
+## Production hardening checklist
+
+- Remove/disable reset-and-kill sample behavior if not needed in production.
+- Use your own signing config/keystore and register certificate fingerprints with Paymentology.
+- Review optional UI customization hooks (`issuerpay/UiConfigurator.kt`) before enabling.
 
 ## Tested versions
 

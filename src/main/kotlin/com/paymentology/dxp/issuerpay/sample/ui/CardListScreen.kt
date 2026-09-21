@@ -1,140 +1,124 @@
 package com.paymentology.dxp.issuerpay.sample.ui
 
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.meawallet.mtp.MeaCard
-import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
-import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardContract
-import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardLauncherInput
-import com.paymentology.dxp.issuerpay.ui.compose.payment.api.PayByCardResult
-import kotlin.jvm.java
+import androidx.compose.foundation.lazy.itemsIndexed
+import com.paymentology.dxp.issuerpay.sample.R
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardUiModel
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListUiState
 
 @Composable
 fun CardListScreen(
-    tokenPlatform: TokenPlatform,
+    state: CardListUiState,
+    onRefresh: () -> Unit,
+    onCardClicked: (String) -> Unit,
+    onDismissDialog: () -> Unit,
+    onSetDefaultSelectedCard: () -> Unit,
+    onDeleteSelectedCard: () -> Unit,
+    onTapAndPaySelectedCard: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var cards by remember { mutableStateOf<List<MeaCard>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var selectedCard by remember { mutableStateOf<MeaCard?>(null) }
-    var showActionDialog by remember { mutableStateOf(false) }
-    var defaultCard by remember { mutableStateOf<MeaCard?>(null) }
-    val context = LocalContext.current
-
-    fun refreshCards() {
-        isLoading = true
-        try {
-            cards = tokenPlatform.getCards()
-            defaultCard = tokenPlatform.getDefaultCardForContactlessPayments()
-            isLoading = false
-        } catch (e: Exception) {
-            errorMessage = e.message ?: "Failed to load cards"
-            isLoading = false
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        refreshCards()
-    }
-
-    val launcher = rememberLauncherForActivityResult(
-        contract = PayByCardContract(),
-        onResult = { result ->
-            when (result) {
-                is PayByCardResult.Success -> {
-                    // Handle successful payment
-                    println("Payment successful. Transaction data: ${result.paymentData}")
-                }
-                is PayByCardResult.Error -> {
-                    // Handle payment error
-                    println("Payment failed: ${result.error}")
-                }
-                is PayByCardResult.Cancelled -> {
-                    // Handle user cancellation
-                    println("Payment cancelled by user")
-                }
-            }
-        }
-    )
-
-    if (showActionDialog && selectedCard != null) {
+    val selectedCard = state.selectedCard
+    if (state.showActionDialog && selectedCard != null) {
         CardActionDialog(
-            card = selectedCard!!,
-            isDefault = defaultCard?.id == selectedCard?.id,
-            onDismiss = { showActionDialog = false },
-            onSetAsDefault = {
-                selectedCard?.setAsDefaultForContactlessPayments()
-                showActionDialog = false
-                refreshCards()
-            },
-            onDelete = {
-                selectedCard?.markForDeletion(null)
-                showActionDialog = false
-                refreshCards()
-            },
-            onTapAndPay = {
-                selectedCard?.let { card ->
-                    launcher.launch(PayByCardLauncherInput(cardId = card.id))
-                }
-                showActionDialog = false
-            }
+            card = selectedCard,
+            isDefault = selectedCard.isDefault,
+            canSetAsDefault = selectedCard.isActive,
+            canTapAndPay = selectedCard.isActive,
+            onDismiss = onDismissDialog,
+            onSetAsDefault = onSetDefaultSelectedCard,
+            onDelete = onDeleteSelectedCard,
+            onTapAndPay = onTapAndPaySelectedCard
         )
     }
 
     Box(modifier = modifier.fillMaxSize()) {
         when {
-            isLoading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
+            state.isLoading -> {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
-            errorMessage != null -> {
-                Text(
-                    text = errorMessage ?: "Unknown error",
-                    color = MaterialTheme.colorScheme.error,
+
+            state.errorMessage != null -> {
+                Column(
                     modifier = Modifier
                         .align(Alignment.Center)
-                        .padding(16.dp)
-                )
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = state.errorMessage,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    OutlinedButton(
+                        onClick = onRefresh,
+                        modifier = Modifier.padding(top = 12.dp)
+                    ) {
+                        Text(stringResource(R.string.ui_refresh))
+                    }
+                }
             }
-            cards.isEmpty() -> {
+
+            state.cards.isEmpty() -> {
                 Text(
-                    text = "No cards available",
+                    text = stringResource(R.string.ui_no_cards_available),
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier
                         .align(Alignment.Center)
                         .padding(16.dp)
                 )
             }
+
             else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(cards) { card ->
+                    itemsIndexed(
+                        items = state.cards,
+                        key = { index, card ->
+                            card.card.id.takeIf { it.isNotBlank() } ?: "card-$index"
+                        }
+                    ) { _, card ->
                         PaymentCardItem(
                             card = card,
-                            isDefault = defaultCard?.id == card.id,
-                            onClick = {
-                                selectedCard = card
-                                showActionDialog = true
-                            }
+                            onClick = { onCardClicked(card.card.id) }
                         )
                     }
                 }
@@ -145,12 +129,10 @@ fun CardListScreen(
 
 @Composable
 fun PaymentCardItem(
-    card: MeaCard,
-    isDefault: Boolean = false,
+    card: CardUiModel,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
-    // Card aspect ratio is typically 1.586:1 (85.6mm x 53.98mm)
     Card(
         onClick = onClick,
         modifier = modifier
@@ -165,24 +147,22 @@ fun PaymentCardItem(
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFF1E3A8A), // Deep blue
-                            Color(0xFF3B82F6)  // Lighter blue
+                            Color(0xFF1E3A8A),
+                            Color(0xFF3B82F6)
                         )
                     )
                 )
                 .padding(16.dp)
         ) {
-            // Default card badge
-            if (isDefault) {
+            if (card.isDefault) {
                 Surface(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd),
+                    modifier = Modifier.align(Alignment.TopEnd),
                     shape = RoundedCornerShape(4.dp),
-                    color = Color(0xFFFFD700), // Gold color
+                    color = Color(0xFFFFD700),
                     tonalElevation = 2.dp
                 ) {
                     Text(
-                        text = "DEFAULT",
+                        text = stringResource(R.string.ui_default_card_badge),
                         color = Color.Black,
                         fontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
@@ -191,13 +171,23 @@ fun PaymentCardItem(
                 }
             }
 
+            if (!card.isActive) {
+                Icon(
+                    imageVector = Icons.Filled.WarningAmber,
+                    contentDescription = stringResource(R.string.ui_this_card_is_not_active),
+                    tint = Color(0xFFFFC107),
+                    modifier = Modifier
+                        .size(18.dp)
+                        .align(Alignment.CenterEnd)
+                )
+            }
+
             Column(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Top section - Payment Network
                 Text(
-                    text = getPaymentNetworkName(card),
+                    text = card.paymentNetworkName,
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
@@ -205,9 +195,8 @@ fun PaymentCardItem(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Middle section - Card ID (masked for visual appeal)
                 Text(
-                    text = formatCardId(card.id),
+                    text = formatCardId(card.card.id),
                     color = Color.White,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
@@ -216,7 +205,6 @@ fun PaymentCardItem(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Bottom section - Status and Tokens
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -224,12 +212,12 @@ fun PaymentCardItem(
                 ) {
                     Column {
                         Text(
-                            text = "Status",
+                            text = stringResource(R.string.ui_status_label),
                             color = Color.White.copy(alpha = 0.7f),
                             fontSize = 10.sp
                         )
                         Text(
-                            text = getDigitizationStatus(card),
+                            text = card.statusText,
                             color = Color.White,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
@@ -238,12 +226,12 @@ fun PaymentCardItem(
 
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "Tokens",
+                            text = stringResource(R.string.ui_tokens_label),
                             color = Color.White.copy(alpha = 0.7f),
                             fontSize = 10.sp
                         )
                         Text(
-                            text = getRemainingTokens(card),
+                            text = card.remainingTokensText,
                             color = Color.White,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
@@ -255,43 +243,12 @@ fun PaymentCardItem(
     }
 }
 
-private fun getPaymentNetworkName(card: MeaCard): String {
-    return try {
-        card.paymentNetwork?.name ?: "Unknown"
-    } catch (_: Exception) {
-        "Unknown"
-    }
-}
-
-private fun formatCardId(cardId: String): String {
-    // Format card ID to look like a card number
-    return if (cardId.length > 16) {
-        cardId.take(16).chunked(4).joinToString(" ")
-    } else {
-        cardId.chunked(4).joinToString(" ")
-    }
-}
-
-private fun getDigitizationStatus(card: MeaCard): String {
-    return try {
-        card.state?.name ?: "Unknown"
-    } catch (_: Exception) {
-        "Unknown"
-    }
-}
-
-private fun getRemainingTokens(card: MeaCard): String {
-    return try {
-        card.transactionCredentialsCount?.toString() ?: "N/A"
-    } catch (_: Exception) {
-        "N/A"
-    }
-}
-
 @Composable
 fun CardActionDialog(
-    card: MeaCard,
+    card: CardUiModel,
     isDefault: Boolean,
+    canSetAsDefault: Boolean,
+    canTapAndPay: Boolean,
     onDismiss: () -> Unit,
     onSetAsDefault: () -> Unit,
     onDelete: () -> Unit,
@@ -299,38 +256,44 @@ fun CardActionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(text = "Card Actions")
-        },
+    title = { Text(text = stringResource(R.string.ui_card_actions_title)) },
         text = {
             Column {
                 Text(
-                    text = "Card: ${formatCardId(card.id)}",
+                text = stringResource(R.string.ui_card_label, formatCardId(card.card.id)),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 Button(
                     onClick = onTapAndPay,
+                    enabled = canTapAndPay,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Tap & Pay")
+                    Text(stringResource(R.string.ui_tap_and_pay))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                if (!isDefault) {
-                    Button(
-                        onClick = onSetAsDefault,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Set as Default")
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                } else {
+                if (isDefault) {
                     Text(
-                        text = "This is your default card",
+                        text = stringResource(R.string.ui_this_is_your_default_card),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
+                } else if (!canSetAsDefault) {
+                    Text(
+                        text = stringResource(R.string.ui_this_card_is_not_active),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                } else {
+                    Button(
+                        onClick = onSetAsDefault,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.ui_set_as_default))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
                 Button(
                     onClick = onDelete,
@@ -339,14 +302,22 @@ fun CardActionDialog(
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Delete Card")
+                    Text(stringResource(R.string.ui_delete_card))
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.ui_cancel))
             }
         }
     )
+}
+
+private fun formatCardId(cardId: String): String {
+    return if (cardId.length > 16) {
+        cardId.take(16).chunked(4).joinToString(" ")
+    } else {
+        cardId.chunked(4).joinToString(" ")
+    }
 }

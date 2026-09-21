@@ -23,7 +23,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.paymentology.dxp.issuerpay.sample.R
+import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationCoordinator
+import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationState
 import com.paymentology.dxp.issuerpay.sample.utils.EncryptedDataReader
 import com.paymentology.dxp.issuerpay.sample.utils.RandomPanBuilder
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.PlatformError
@@ -37,11 +42,29 @@ import com.paymentology.dxp.issuerpay.ui.compose.digitization.api.PaymentCardCon
 
 @Composable
 fun DigitizeFlowScreen(
+    registrationCoordinator: RegistrationCoordinator,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var cardDigitizationStatus by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
+    val registrationState by registrationCoordinator.registrationState.collectAsStateWithLifecycle()
+    val registrationErrorMessage = (registrationState as? RegistrationState.Failed)
+        ?.reason
+        ?.toDisplayErrorText()
+        .orEmpty()
+
+    // Pre-load string resources for use in callbacks
+    val encryptedDataLoadingFailed = stringResource(R.string.ui_encrypted_data_loading_failed)
+    val digitizationFailed = stringResource(R.string.ui_digitization_failed)
+    val digitizationSuccessFormat = stringResource(R.string.ui_card_digitized_successfully)
+    val digitizationUnknownError = stringResource(R.string.ui_unknown_error)
+    val userCancelled = stringResource(R.string.ui_user_cancelled)
+    val digitizationMethodLabels = mapOf(
+        DigitizationMethod.PAN to stringResource(R.string.ui_digitization_method_pan),
+        DigitizationMethod.CARD_ID to stringResource(R.string.ui_digitization_method_card_id),
+        DigitizationMethod.ENCRYPTED_PAN to stringResource(R.string.ui_digitization_method_encrypted_pan)
+    )
 
     var selectedDigitizationMethod by remember { mutableStateOf(DigitizationMethod.PAN) }
     var selectedDigitizationOption by remember { mutableStateOf(DigitizationOption.Normal) }
@@ -73,7 +96,7 @@ fun DigitizeFlowScreen(
             encryptedKey = encryptedData.encryptedKey
             initialVector = encryptedData.iv
         } else {
-            errorMessage = "Encrypted data loading failed"
+            errorMessage = encryptedDataLoadingFailed
         }
     }
 
@@ -84,6 +107,10 @@ fun DigitizeFlowScreen(
                 currentCardholderName = cardholderName
             )
         }
+    }
+
+    LaunchedEffect(Unit) {
+        registrationCoordinator.ensureRegistered()
     }
 
     // Primary client integration #1:
@@ -148,17 +175,17 @@ fun DigitizeFlowScreen(
         verticalArrangement = Arrangement.Top
     ) {
         Text(
-            text = "Digitization Flow",
+            text = stringResource(R.string.ui_digitization_flow_title),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
         M3ExposedDropdown(
-            label = "Choose digitization method",
+            label = stringResource(R.string.ui_choose_digitization_method),
             options = DigitizationMethod.entries,
             selected = selectedDigitizationMethod,
             onSelected = { selectedDigitizationMethod = it },
-            optionLabel = { it.label },
+            optionLabel = { digitizationMethodLabels[it].orEmpty() },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -225,7 +252,7 @@ fun DigitizeFlowScreen(
                         encryptedKey = encryptedData.encryptedKey
                         initialVector = encryptedData.iv
                     } else {
-                        errorMessage = "Encrypted data loading failed"
+                        errorMessage = encryptedDataLoadingFailed
                     }
                 },
                 onLoadFromFile = { encryptedFilePicker.launch("application/json") }
@@ -234,28 +261,41 @@ fun DigitizeFlowScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        Text(
+            text = stringResource(
+                R.string.ui_registration_label,
+                registrationState.toDisplayLabel()
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         // Primary client integration #3:
         // Invoke the library flow entrypoint via CardDigitizationButton.
         CardDigitizationButton(
-            label = "Digitize Card",
+            label = stringResource(R.string.ui_digitize_card),
+            enabled = registrationState == RegistrationState.Registered,
             modifier = Modifier.fillMaxWidth(),
             params = launcherInput,
             callback = object : CardDigitizationCallback {
                 override fun onCardDigitized(cardId: String) {
-                    cardDigitizationStatus = "✓ Card digitized successfully. Card ID: $cardId"
+                    cardDigitizationStatus = digitizationSuccessFormat.replace("%1\$s", cardId)
                     errorMessage = ""
                 }
 
                 override fun onCardDigitizationFailed(error: PlatformError) {
-                    cardDigitizationStatus = "✗ Digitization failed"
+                    cardDigitizationStatus = digitizationFailed
                     errorMessage = when (error) {
-                        is PlatformError.MtpSdkError -> "${error.code}: ${error.message ?: "Unknown error"}"
+                        is PlatformError.MtpSdkError -> "${error.code}: ${error.message ?: digitizationUnknownError}"
                         else -> error.javaClass.name
                     }
+                    registrationCoordinator.ensureRegistered()
                 }
 
                 override fun onUserCancelled() {
-                    cardDigitizationStatus = "User cancelled"
+                    cardDigitizationStatus = userCancelled
                     errorMessage = ""
                 }
             }
@@ -270,13 +310,16 @@ fun DigitizeFlowScreen(
             )
         }
 
-        if (errorMessage.isNotEmpty()) {
+        val visibleErrorMessage = registrationErrorMessage.ifBlank { errorMessage }
+
+        if (visibleErrorMessage.isNotEmpty()) {
             Text(
-                text = "Error: $errorMessage",
+                text = stringResource(R.string.ui_error_prefix, visibleErrorMessage),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 16.dp)
             )
         }
     }
+
 }

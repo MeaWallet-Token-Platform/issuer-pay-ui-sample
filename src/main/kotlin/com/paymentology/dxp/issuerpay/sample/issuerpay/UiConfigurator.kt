@@ -46,8 +46,8 @@ fun configureCustomUi() {
      * Property type: `@Composable () -> Unit`.
      * Displayed when submission fails during terminal communication.
      */
-    UiComposeConfigHolderImpl.transactionFailedContent = {
-        Text("Ohhh nooooo, it failed!")
+    UiComposeConfigHolderImpl.transactionFailedContent = { errorMessage ->
+        Text("Payment failed, it failed with ${errorMessage?.message ?: "unknown error"} !")
     }
 
     /**
@@ -76,12 +76,12 @@ fun configureCustomUi() {
     /**
      * Content for the digitization failure screen.
      *
-     * Property type: `@Composable (String?) -> Unit`.
+     * Property type: `@Composable ( FailureUiModel?) -> Unit`.
      * Displayed when digitization fails.
      *
-     * @param errorMessage Failure reason as `String?`; nullable when SDK does not provide details.
+     * @param errorMessage Failure reason as `FailureUiModel?`; nullable when SDK does not provide details.
      */
     UiComposeConfigHolderImpl.digitizationFailedContent = { errorMessage ->
-        Text("Digitization failed: ${errorMessage ?: "unknown error"}")
+        Text("Digitization failed: ${errorMessage?.message ?: "unknown error"}")
     }
 }
