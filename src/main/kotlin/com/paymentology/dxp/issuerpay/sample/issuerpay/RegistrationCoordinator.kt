@@ -4,25 +4,24 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import com.paymentology.dxp.issuerpay.ui.compose.core.api.IssuerPayListener
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.InitializationHelper
+import com.paymentology.dxp.issuerpay.ui.compose.core.api.PlatformError
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.PushServiceInstanceManager
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.RegistrationHelper
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeout
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 sealed interface RegistrationState {
     data object Unregistered : RegistrationState
@@ -38,8 +37,7 @@ enum class RegistrationFailureReason {
     NoNetwork,
     MissingNetworkPermission,
     NetworkMonitorUnavailable,
-    RegistrationFailed,
-    RegistrationTimedOut
+    RegistrationFailed
 }
 
 class RegistrationCoordinator(
@@ -48,15 +46,8 @@ class RegistrationCoordinator(
     private val initializationHelper: InitializationHelper,
     private val pushServiceInstanceManager: PushServiceInstanceManager
 ) {
-    companion object {
-        private const val REGISTRATION_TIMEOUT_MS = 20_000L
-        private const val REGISTRATION_STATE_WAIT_MS = 5_000L
-        private const val REGISTRATION_STATE_POLL_INTERVAL_MS = 250L
-    }
-
     private val context = appContext.applicationContext
-    private var coordinatorJob: Job = SupervisorJob()
-    private var coordinatorScope: CoroutineScope = CoroutineScope(coordinatorJob + Dispatchers.IO)
+    private val coordinatorScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val registrationMutex = Mutex()
     private val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
 
@@ -93,11 +84,6 @@ class RegistrationCoordinator(
             return
         }
 
-        if (!coordinatorJob.isActive) {
-            coordinatorJob = SupervisorJob()
-            coordinatorScope = CoroutineScope(coordinatorJob + Dispatchers.IO)
-        }
-
         isStarted = true
         registerNetworkCallbackIfPossible()
         ensureRegistered()
@@ -108,10 +94,9 @@ class RegistrationCoordinator(
         if (!isStarted) {
             return
         }
-
         isStarted = false
         unregisterNetworkCallbackIfRegistered()
-        coordinatorScope.cancel()
+        unregisterNetworkCallbackIfRegistered()
     }
 
     fun onAppResumed() {
@@ -139,29 +124,18 @@ class RegistrationCoordinator(
 
                 _registrationState.value = RegistrationState.Registering
 
-                val registrationResult = runCatching {
-                    withTimeout(REGISTRATION_TIMEOUT_MS.milliseconds) {
-                        RegistrationHelper(
-                            context = context,
-                            tokenPlatform = tokenPlatform,
-                            pushServiceInstanceManager = pushServiceInstanceManager,
-                            initializationHelper = initializationHelper
-                        ).registerWallet("en", null)
-                    }
+                val registrationResult = runCatching { awaitRegistration() }
+
+                if (!isStarted) {
+                    return@withLock
                 }
 
-                if (waitUntilRegistered()) {
+                if (registrationResult.isSuccess) {
                     _registrationState.value = RegistrationState.Registered
                 } else {
                     val failure = registrationResult.exceptionOrNull()
-                    val reason = if (failure is TimeoutCancellationException) {
-                        RegistrationFailureReason.RegistrationTimedOut
-                    } else {
-                        RegistrationFailureReason.RegistrationFailed
-                    }
-
                     _registrationState.value = RegistrationState.Failed(
-                        reason = reason,
+                        reason = RegistrationFailureReason.RegistrationFailed,
                         details = failure?.message
                     )
                 }
@@ -179,15 +153,32 @@ class RegistrationCoordinator(
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
-    private suspend fun waitUntilRegistered(): Boolean {
-        val deadline = System.currentTimeMillis() + REGISTRATION_STATE_WAIT_MS
-        while (System.currentTimeMillis() < deadline) {
-            if (isCurrentlyRegistered()) {
-                return true
-            }
-            delay(REGISTRATION_STATE_POLL_INTERVAL_MS.milliseconds)
+    private suspend fun awaitRegistration() {
+        suspendCoroutine { continuation ->
+            var completed = false
+
+            RegistrationHelper(
+                context = context,
+                tokenPlatform = tokenPlatform,
+                pushServiceInstanceManager = pushServiceInstanceManager,
+                initializationHelper = initializationHelper
+            ).registerWallet(
+                "en",
+                object : IssuerPayListener {
+                    override fun onSuccess() {
+                        if (completed) return
+                        completed = true
+                        continuation.resume(Unit)
+                    }
+
+                    override fun onFailure(error: PlatformError) {
+                        if (completed) return
+                        completed = true
+                        continuation.resumeWithException(RegistrationFailedException(error))
+                    }
+                }
+            )
         }
-        return isCurrentlyRegistered()
     }
 
     @Synchronized
@@ -226,4 +217,8 @@ class RegistrationCoordinator(
             isNetworkCallbackRegistered = false
         }
     }
+
+    private class RegistrationFailedException(
+        error: PlatformError
+    ) : IllegalStateException(error.toString())
 }

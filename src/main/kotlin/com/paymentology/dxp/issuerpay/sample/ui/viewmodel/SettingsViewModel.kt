@@ -145,10 +145,8 @@ class SettingsViewModel(
 
     private fun setDefaultPaymentApplication(activity: Activity) {
         viewModelScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                runCatching {
-                    tokenPlatform.setDefaultPaymentApplication(activity, 420)
-                }
+            val result = runCatching {
+                tokenPlatform.setDefaultPaymentApplication(activity, 420)
             }
 
             result.fold(

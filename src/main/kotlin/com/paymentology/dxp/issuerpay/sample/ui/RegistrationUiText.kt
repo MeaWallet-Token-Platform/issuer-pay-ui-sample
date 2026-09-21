@@ -20,5 +20,4 @@ fun RegistrationFailureReason.toDisplayErrorText(): String = when (this) {
     RegistrationFailureReason.MissingNetworkPermission -> stringResource(R.string.ui_registration_error_missing_network_permission)
     RegistrationFailureReason.NetworkMonitorUnavailable -> stringResource(R.string.ui_registration_error_network_monitor_unavailable)
     RegistrationFailureReason.RegistrationFailed -> stringResource(R.string.ui_registration_error_failed)
-    RegistrationFailureReason.RegistrationTimedOut -> stringResource(R.string.ui_registration_error_timed_out)
 }
