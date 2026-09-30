@@ -1,23 +1,25 @@
 package com.paymentology.dxp.issuerpay.sample.ui
 
+import androidx.annotation.StringRes
+import com.paymentology.dxp.issuerpay.sample.R
 import java.util.Calendar
 import kotlin.random.Random
 
-enum class DigitizationOption(val label: String) {
-    Normal("Normal"),
-    YellowFlow("Yellow Flow"),
-    RedFlow("Red Flow")
+enum class DigitizationOption(@StringRes val labelRes: Int) {
+    Normal(R.string.ui_digitization_option_normal),
+    YellowFlow(R.string.ui_digitization_option_yellow_flow),
+    RedFlow(R.string.ui_digitization_option_red_flow)
 }
 
-enum class PaymentNetwork(val label: String) {
-    Mastercard("Mastercard"),
-    Visa("VISA")
+enum class PaymentNetwork(@StringRes val labelRes: Int) {
+    Mastercard(R.string.ui_payment_network_mastercard),
+    Visa(R.string.ui_payment_network_visa)
 }
 
-enum class DigitizationMethod(val label: String) {
-    PAN("PAN"),
-    CARD_ID("Card Id"),
-    ENCRYPTED_PAN("Encrypted PAN")
+enum class DigitizationMethod(@StringRes val labelRes: Int) {
+    PAN(R.string.ui_digitization_method_pan),
+    CARD_ID(R.string.ui_digitization_method_card_id),
+    ENCRYPTED_PAN(R.string.ui_digitization_method_encrypted_pan)
 }
 
 fun getCurrentYear(): Int = Calendar.getInstance().get(Calendar.YEAR) % 100

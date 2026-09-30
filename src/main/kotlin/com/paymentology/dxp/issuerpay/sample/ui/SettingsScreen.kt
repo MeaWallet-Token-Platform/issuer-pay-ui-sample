@@ -1,6 +1,6 @@
 package com.paymentology.dxp.issuerpay.sample.ui
 
-import androidx.activity.ComponentActivity
+import android.app.Activity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -10,101 +10,72 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.paymentology.dxp.issuerpay.sample.messaging.PushServiceInstanceManagerImpl
-import com.paymentology.dxp.issuerpay.ui.compose.core.api.TokenPlatform
-
+import com.paymentology.dxp.issuerpay.sample.R
+import com.paymentology.dxp.issuerpay.sample.issuerpay.RegistrationState
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsUiState
 
 @Composable
 fun SettingsScreen(
-    tokenPlatform: TokenPlatform,
+    state: SettingsUiState,
+    onRefresh: () -> Unit,
+    onSetDefaultPaymentApp: (Activity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val msgToken by PushServiceInstanceManagerImpl
-        .getObservableIdToken(coroutineScope)
-        .collectAsState(initial = "")
-    var refreshTick by remember { mutableStateOf(0) }
-
-    val sdkInfo = remember(refreshTick) {
-        runCatching {
-            listOf(
-                tokenPlatform.configuration.versionName(),
-                tokenPlatform.configuration.buildType(),
-                tokenPlatform.configuration.cdCvmModel()
-            ).joinToString("; ")
-        }.getOrElse { "Error: ${it.message ?: it.javaClass.simpleName}" }
-    }
-
-    val initialized = remember(refreshTick) {
-        runCatching { tokenPlatform.isInitialized().toString() }
-            .getOrElse { "Error: ${it.message ?: it.javaClass.simpleName}" }
-    }
-    val registered = remember(refreshTick) {
-        runCatching { tokenPlatform.isRegistered().toString() }
-            .getOrElse { "Error: ${it.message ?: it.javaClass.simpleName}" }
-    }
-    val secureNfcSupported = remember(refreshTick) {
-        runCatching { tokenPlatform.isSecureNfcSupported().toString() }
-            .getOrElse { "Error: ${it.message ?: it.javaClass.simpleName}" }
-    }
-    val secureNfcEnabled = remember(refreshTick) {
-        runCatching { tokenPlatform.isSecureNfcEnabled().toString() }
-            .getOrElse { "Error: ${it.message ?: it.javaClass.simpleName}" }
-    }
-    val defaultPaymentApp = remember(refreshTick) {
-        runCatching { tokenPlatform.isDefaultPaymentApplication(context).toString() }
-            .getOrElse { "Error: ${it.message ?: it.javaClass.simpleName}" }
-    }
-    val userAuthenticated = remember(refreshTick) {
-        runCatching {
-            if (tokenPlatform.isInitialized()) {
-                tokenPlatform.cdCvm.isCardholderAuthenticated().toString()
-            } else {
-                "false"
-            }
-        }.getOrElse { "Error: ${it.message ?: it.javaClass.simpleName}" }
-    }
-
-    val isDefaultPaymentApp = defaultPaymentApp.equals("true", ignoreCase = true)
 
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        SettingRow("SDK Info", sdkInfo)
-        SettingRow("Initialized", initialized)
-        SettingRow("Registered", registered)
-        SettingRow("Msg Token", msgToken.ifBlank { "-" })
-        SettingRow("Secure NFC supported", secureNfcSupported)
-        SettingRow("Secure NFC enabled", secureNfcEnabled)
-        SettingRow("Default Payment App", defaultPaymentApp)
-        SettingRow("User auth", userAuthenticated)
+        val booleanUnknown = stringResource(R.string.ui_value_unknown)
+        SettingRow(stringResource(R.string.ui_sdk_info_label), state.sdkInfo)
+        SettingRow(stringResource(R.string.ui_initialized_label), state.initialized.toDisplayText())
+        SettingRow(stringResource(R.string.ui_registered_label), state.registrationState.toDisplayText())
+        SettingRow(stringResource(R.string.ui_msg_token_label), state.msgToken.ifBlank { booleanUnknown })
+        SettingRow(stringResource(R.string.ui_secure_nfc_supported_label), state.secureNfcSupported.toDisplayText())
+        SettingRow(stringResource(R.string.ui_secure_nfc_enabled_label), state.secureNfcEnabled.toDisplayText())
+        SettingRow(stringResource(R.string.ui_default_payment_app_label), state.isDefaultPaymentApp.toDisplayText())
+        SettingRow(stringResource(R.string.ui_user_auth_label), state.userAuthenticated.toDisplayText())
 
-        if (!isDefaultPaymentApp && context is ComponentActivity) {
+        if (state.isDefaultPaymentApp == false) {
             OutlinedButton(
-                onClick = { tokenPlatform.setDefaultPaymentApplication(context, 420) },
+                onClick = {
+                    (context as? Activity)?.let { activity ->
+                        onSetDefaultPaymentApp(activity)
+                    }
+                },
                 modifier = Modifier.padding(top = 16.dp)
             ) {
-                Text("Set as default app")
+                    Text(stringResource(R.string.ui_set_as_default_app))
             }
         }
 
         OutlinedButton(
-            onClick = { refreshTick++ },
+            onClick = onRefresh,
             modifier = Modifier.padding(top = 8.dp)
         ) {
-            Text("Refresh")
+            Text(stringResource(R.string.ui_refresh))
+        }
+
+        state.errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 12.dp)
+            )
+        }
+
+        if (state.registrationState is RegistrationState.Failed) {
+            Text(
+                text = state.registrationState.reason.toDisplayErrorText(),
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 12.dp)
+            )
         }
     }
 }
@@ -116,3 +87,13 @@ private fun SettingRow(label: String, value: String) {
         Text(text = value, style = MaterialTheme.typography.bodyMedium)
     }
 }
+
+@Composable
+private fun Boolean?.toDisplayText(): String = when (this) {
+    true -> stringResource(R.string.ui_value_true)
+    false -> stringResource(R.string.ui_value_false)
+    null -> stringResource(R.string.ui_value_unknown)
+}
+
+@Composable
+private fun RegistrationState.toDisplayText(): String = toDisplayLabel()

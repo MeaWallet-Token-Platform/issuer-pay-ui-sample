@@ -1,4 +1,4 @@
-package com.paymentology.dxp.issuerpay.sample.messaging
+package com.paymentology.dxp.issuerpay.sample.issuerpay.messaging
 
 import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentology.dxp.issuerpay.ui.compose.core.api.PushServiceInstanceIdGetListener
@@ -11,9 +11,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
 
 object PushServiceInstanceManagerImpl : PushServiceInstanceManager {
-
-    private var tokenDataMerger: StateFlow<String>? = null
-    private var localTokenKeeper: MutableStateFlow<String> = MutableStateFlow("")
+    private val localTokenKeeper: MutableStateFlow<String> = MutableStateFlow("")
 
     override fun getIdToken(onResultListener: PushServiceInstanceIdGetListener) {
 
@@ -21,14 +19,14 @@ object PushServiceInstanceManagerImpl : PushServiceInstanceManager {
     }
 
     override fun getObservableIdToken(coroutineScope: CoroutineScope): StateFlow<String> {
-        val mergedStateFlow = tokenDataMerger ?: merge(
+        val mergedStateFlow = merge(
             MyFcmListenerService.getLastReceivedToken(),
             localTokenKeeper
         ).stateIn(
             scope = coroutineScope,
             started = SharingStarted.Eagerly,
             initialValue = ""
-        ).also { tokenDataMerger = it }
+        )
 
         if (mergedStateFlow.value.isEmpty()) {
             getFirebaseInstanceId(null)
