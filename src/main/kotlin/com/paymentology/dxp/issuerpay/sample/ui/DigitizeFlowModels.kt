@@ -22,6 +22,11 @@ enum class DigitizationMethod(@StringRes val labelRes: Int) {
     ENCRYPTED_PAN(R.string.ui_digitization_method_encrypted_pan)
 }
 
+enum class DigitizationMode(@StringRes val labelRes: Int) {
+    DIRECT(R.string.ui_digitization_mode_direct),
+    ACQUIRE_PAN(R.string.ui_digitization_mode_acquire_pan)
+}
+
 fun getCurrentYear(): Int = Calendar.getInstance().get(Calendar.YEAR) % 100
 
 fun getCurrentMonth(): Int = Calendar.getInstance().get(Calendar.MONTH) + 1

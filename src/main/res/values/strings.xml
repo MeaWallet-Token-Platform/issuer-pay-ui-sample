@@ -49,6 +49,7 @@
     <string name="ui_card_digitized_successfully">✓ Card digitized successfully. Card ID: %1$s</string>
     <string name="ui_digitization_failed">✗ Digitization failed</string>
     <string name="ui_digitization_flow_title">Digitization Flow</string>
+    <string name="ui_choose_digitization_mode">Choose digitization mode</string>
     <string name="ui_choose_digitization_method">Choose digitization method</string>
     <string name="ui_choose_digitization_type">Choose digitization type</string>
     <string name="ui_choose_payment_network">Choose payment network</string>
@@ -86,6 +87,8 @@
     <string name="ui_digitization_method_pan">PAN</string>
     <string name="ui_digitization_method_card_id">Card ID</string>
     <string name="ui_digitization_method_encrypted_pan">Encrypted PAN</string>
+    <string name="ui_digitization_mode_direct">DIRECT</string>
+    <string name="ui_digitization_mode_acquire_pan">ACQUIRE_PAN</string>
     <string name="ui_unknown_error">Unknown error</string>
     <string name="ui_value_true">true</string>
     <string name="ui_value_false">false</string>

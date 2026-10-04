@@ -65,7 +65,12 @@ fun DigitizeFlowScreen(
         DigitizationMethod.CARD_ID to stringResource(R.string.ui_digitization_method_card_id),
         DigitizationMethod.ENCRYPTED_PAN to stringResource(R.string.ui_digitization_method_encrypted_pan)
     )
+    val digitizationModeLabels = mapOf(
+        DigitizationMode.DIRECT to stringResource(R.string.ui_digitization_mode_direct),
+        DigitizationMode.ACQUIRE_PAN to stringResource(R.string.ui_digitization_mode_acquire_pan)
+    )
 
+    var selectedDigitizationMode by remember { mutableStateOf(DigitizationMode.DIRECT) }
     var selectedDigitizationMethod by remember { mutableStateOf(DigitizationMethod.PAN) }
     var selectedDigitizationOption by remember { mutableStateOf(DigitizationOption.Normal) }
     var selectedNetwork by remember { mutableStateOf(PaymentNetwork.Mastercard) }
@@ -113,34 +118,45 @@ fun DigitizeFlowScreen(
         registrationCoordinator.ensureRegistered()
     }
 
+    val isAcquirePanMode = selectedDigitizationMode == DigitizationMode.ACQUIRE_PAN
+    val isConfigurationEnabled = !isAcquirePanMode
+
     // Primary client integration #1:
     // Build library DigitizationParameters from UI input before invoking the flow.
-    val params = when (selectedDigitizationMethod) {
-        DigitizationMethod.PAN -> DigitizationParameters.Pan(
-            pan = pan,
-            expiryMonth = expiryMonth,
-            expiryYear = expiryYear,
-            cardholderName = cardholderName
-        )
-        DigitizationMethod.CARD_ID -> DigitizationParameters.Secret(
-            cardId = cardId,
-            cardSecret = cardSecret,
-            bin = cardBin.ifBlank { null }
-        )
-        DigitizationMethod.ENCRYPTED_PAN -> DigitizationParameters.EncryptedPan(
-            encryptedCardData = encryptedCardData,
-            publicKeyFingerprint = publicKeyFingerprint,
-            encryptedKey = encryptedKey,
-            initialVector = initialVector
-        )
+    val directParams = if (isConfigurationEnabled) {
+        when (selectedDigitizationMethod) {
+            DigitizationMethod.PAN -> DigitizationParameters.Pan(
+                pan = pan,
+                expiryMonth = expiryMonth,
+                expiryYear = expiryYear,
+                cardholderName = cardholderName
+            )
+            DigitizationMethod.CARD_ID -> DigitizationParameters.Secret(
+                cardId = cardId,
+                cardSecret = cardSecret,
+                bin = cardBin.ifBlank { null }
+            )
+            DigitizationMethod.ENCRYPTED_PAN -> DigitizationParameters.EncryptedPan(
+                encryptedCardData = encryptedCardData,
+                publicKeyFingerprint = publicKeyFingerprint,
+                encryptedKey = encryptedKey,
+                initialVector = initialVector
+            )
+        }
+    } else {
+        null
     }
 
-    val generatedLastDigits = remember(selectedDigitizationMethod) { generateRandomLastDigits() }
-    val lastDigits = when (params) {
-        is DigitizationParameters.Pan -> params.pan.takeLast(4)
+    val generatedLastDigits = remember(selectedDigitizationMethod, selectedDigitizationMode) {
+        generateRandomLastDigits()
+    }
+    val lastDigits = when (directParams) {
+        is DigitizationParameters.Pan -> directParams.pan.takeLast(4)
         is DigitizationParameters.Secret -> generatedLastDigits
         is DigitizationParameters.EncryptedPan -> generatedLastDigits
-        else -> generatedLastDigits
+        is DigitizationParameters.E2eEncryption -> generatedLastDigits
+        is DigitizationParameters.Receipt -> generatedLastDigits
+        null -> generatedLastDigits
     }
 
     // Primary client integration #2:
@@ -163,10 +179,15 @@ fun DigitizeFlowScreen(
 //                }
     )
 
-    val launcherInput = DigitizationLauncherInput(
-        params = params,
-        paymentCardConfig = paymentCardConfig
-    )
+    val launcherInput = when (selectedDigitizationMode) {
+        DigitizationMode.DIRECT -> DigitizationLauncherInput.Direct(
+            params = checkNotNull(directParams),
+            paymentCardConfig = paymentCardConfig
+        )
+        DigitizationMode.ACQUIRE_PAN -> DigitizationLauncherInput.AcquirePan(
+            paymentCardConfig = paymentCardConfig
+        )
+    }
 
     Column(
         modifier = modifier
@@ -181,12 +202,24 @@ fun DigitizeFlowScreen(
         )
 
         M3ExposedDropdown(
+            label = stringResource(R.string.ui_choose_digitization_mode),
+            options = DigitizationMode.entries,
+            selected = selectedDigitizationMode,
+            onSelected = { selectedDigitizationMode = it },
+            optionLabel = { digitizationModeLabels[it].orEmpty() },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        M3ExposedDropdown(
             label = stringResource(R.string.ui_choose_digitization_method),
             options = DigitizationMethod.entries,
             selected = selectedDigitizationMethod,
             onSelected = { selectedDigitizationMethod = it },
             optionLabel = { digitizationMethodLabels[it].orEmpty() },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = isConfigurationEnabled
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -220,7 +253,8 @@ fun DigitizeFlowScreen(
                 onSelectedMonth = { expiryMonth = it },
                 yearOptions = yearOptions,
                 selectedYear = expiryYear,
-                onSelectedYear = { expiryYear = it }
+                onSelectedYear = { expiryYear = it },
+                enabled = isConfigurationEnabled
             )
 
             DigitizationMethod.CARD_ID -> CardIdDigitizationSection(
@@ -232,7 +266,8 @@ fun DigitizeFlowScreen(
                 onCardSecretGenerate = { cardSecret = "LO25RZ53" },
                 cardBin = cardBin,
                 onCardBinChange = { cardBin = it },
-                onCardBinGenerate = { cardBin = "400000" }
+                onCardBinGenerate = { cardBin = "400000" },
+                enabled = isConfigurationEnabled
             )
 
             DigitizationMethod.ENCRYPTED_PAN -> EncryptedPanDigitizationSection(
@@ -255,7 +290,8 @@ fun DigitizeFlowScreen(
                         errorMessage = encryptedDataLoadingFailed
                     }
                 },
-                onLoadFromFile = { encryptedFilePicker.launch("application/json") }
+                onLoadFromFile = { encryptedFilePicker.launch("application/json") },
+                enabled = isConfigurationEnabled
             )
         }
 
