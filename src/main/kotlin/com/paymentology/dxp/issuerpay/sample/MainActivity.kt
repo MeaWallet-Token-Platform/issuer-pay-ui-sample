@@ -20,6 +20,7 @@ import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.SettingsViewModel
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.cardListViewModelFactory
 import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.settingsViewModelFactory
 import com.paymentology.dxp.issuerpay.sample.ui.theme.MyComposeAppTheme
+import com.paymentology.dxp.issuerpay.sample.ui.viewmodel.CardListIntent
 
 
 /**
@@ -74,6 +75,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         registrationCoordinator.onAppResumed()
+        cardListViewModel.dispatch(CardListIntent.Refresh)
     }
 
     private fun resetTokenPlatformAndRestart() {
